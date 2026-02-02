@@ -25,10 +25,10 @@ export function CourtDashboard() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-white mb-1">
+          <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
             Court Administration
           </motion.h1>
-          <p className="text-slate-400">Manage cases, hearings, and court operations</p>
+          <p className="text-slate-500 dark:text-slate-400">Manage cases, hearings, and court operations</p>
         </div>
         <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
           className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-shadow">
@@ -40,7 +40,7 @@ export function CourtDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all group">
+            className="p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-all group shadow-sm dark:shadow-none">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
                 <stat.icon className="w-5 h-5 text-white" />
@@ -51,8 +51,8 @@ export function CourtDashboard() {
                 </span>
               )}
             </div>
-            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-            <p className="text-sm text-slate-400">{stat.label}</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stat.value}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
           </motion.div>
         ))}
       </div>
@@ -61,8 +61,8 @@ export function CourtDashboard() {
         {/* Charts */}
         <div className="lg:col-span-2 space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <h3 className="text-lg font-semibold text-white mb-6">Cases Trend</h3>
+            className="p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Cases Trend</h3>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={analyticsData.casesTrend}>
                 <defs>
@@ -88,7 +88,7 @@ export function CourtDashboard() {
           {/* Cases Table */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <h3 className="text-lg font-semibold text-white mb-4">Recent Cases</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Cases</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -104,7 +104,7 @@ export function CourtDashboard() {
                     <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
                       className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
                       <td className="py-4 px-4 text-sm text-indigo-400 font-mono">{c.caseNumber}</td>
-                      <td className="py-4 px-4 text-sm text-white max-w-xs truncate">{c.title}</td>
+                      <td className="py-4 px-4 text-sm text-slate-900 dark:text-white max-w-xs truncate">{c.title}</td>
                       <td className="py-4 px-4"><StatusBadge status={c.status} size="sm" /></td>
                       <td className="py-4 px-4">
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -126,7 +126,7 @@ export function CourtDashboard() {
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <h3 className="font-semibold text-white mb-4">Cases by Type</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Cases by Type</h3>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={analyticsData.casesByType} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" strokeWidth={0}>
@@ -137,7 +137,7 @@ export function CourtDashboard() {
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
               {analyticsData.casesByType.slice(0, 4).map(t => (
-                <div key={t.name} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.02]">
+                <div key={t.name} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-white/[0.02]">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
                   <span className="text-xs text-slate-400">{t.name}</span>
                 </div>
@@ -147,7 +147,7 @@ export function CourtDashboard() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <h3 className="font-semibold text-white mb-4">Daily Hearings</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Daily Hearings</h3>
             <ResponsiveContainer width="100%" height={150}>
               <BarChart data={analyticsData.dailyHearings}>
                 <XAxis dataKey="day" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
@@ -165,15 +165,15 @@ export function CourtDashboard() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <h3 className="font-semibold text-white mb-4">Top Advocates</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Top Advocates</h3>
             <div className="space-y-3">
               {advocates.slice(0, 3).map((a, i) => (
-                <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold">
                     {a.name.split(' ').pop().charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{a.name}</p>
+                    <p className="text-sm text-slate-900 dark:text-white font-medium truncate">{a.name}</p>
                     <p className="text-xs text-slate-500">{a.activeCases} active cases</p>
                   </div>
                   <div className="text-right">

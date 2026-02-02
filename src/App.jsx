@@ -58,7 +58,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-            <div className="min-h-screen bg-[#030712] text-white">
+            <div className="min-h-screen bg-slate-100 dark:bg-[#030712] text-slate-900 dark:text-white">
               <AppRoutes />
             </div>
           </ToastProvider>

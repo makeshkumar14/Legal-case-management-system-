@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 100px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+html, body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* FullCalendar Dark Theme */
+.calendar-dark .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.05);
+  --fc-today-bg-color: rgba(99, 102, 241, 0.1);
+  --fc-event-bg-color: #6366f1;
+  --fc-event-border-color: #6366f1;
+  --fc-page-bg-color: transparent;
+}
+
+.calendar-dark .fc-theme-standard td,
+.calendar-dark .fc-theme-standard th {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.calendar-dark .fc-col-header-cell-cushion,
+.calendar-dark .fc-daygrid-day-number {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.calendar-dark .fc-daygrid-day-number {
+  padding: 8px;
+}
+
+.calendar-dark .fc-button {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+  transition: all 0.2s !important;
+}
+
+.calendar-dark .fc-button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+.calendar-dark .fc-button-active {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8 !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+.calendar-dark .fc-toolbar-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px !important;
+}
+
+.calendar-dark .fc-event {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  font-weight: 500 !important;
+}
+
+.calendar-dark .fc-day-today {
+  background: rgba(99, 102, 241, 0.08) !important;
+}
+
+.calendar-dark .fc-daygrid-day:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Recharts Customization */
+.recharts-default-tooltip {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Input and Select Customization */
+input[type="checkbox"] {
+  accent-color: #6366f1;
+}
+
+select option {
+  background: #0f172a;
+  color: #fff;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background-size: 200% 100%;
+}
+
+/* Focus States */
+input:focus, select:focus, textarea:focus, button:focus {
+  outline: none;
+}
+
+/* Glass Morphism Utility */
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Line Clamp */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -243,3 +243,154 @@ button:focus {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ============================================
+   CREAM & LIME GREEN MODERN THEME
+   Reference-inspired design
+   ============================================ */
+
+/* CSS Variables for new theme */
+:root {
+  --cream-bg: #f7f6f3;
+  --cream-light: #fdfcfa;
+  --cream-dark: #efeee9;
+  --lime-green: #b4f461;
+  --lime-green-dark: #9ae04d;
+  --lime-green-light: #c8ff7a;
+  --navy-dark: #1a1a2e;
+  --navy-card: #232338;
+  --navy-lighter: #2d2d45;
+  --text-dark: #1a1a2e;
+  --text-muted: #6b6b80;
+  --border-light: #e5e4df;
+}
+
+.motion-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--cream-bg);
+}
+
+/* Gradient glow on edges */
+.motion-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 80% 60% at -10% 50%, rgba(180, 244, 97, 0.4), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 110% 50%, rgba(180, 244, 97, 0.35), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 110%, rgba(180, 244, 97, 0.2), transparent 50%);
+}
+
+/* Decorative Elements */
+.gradient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+}
+
+.gradient-blob-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.6) 0%, rgba(180, 244, 97, 0.2) 50%, transparent 70%);
+  top: -15%;
+  left: -10%;
+  animation: blobFloat1 25s ease-in-out infinite;
+}
+
+.gradient-blob-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.5) 0%, rgba(154, 224, 77, 0.2) 50%, transparent 70%);
+  bottom: -10%;
+  right: -5%;
+  animation: blobFloat2 30s ease-in-out infinite;
+}
+
+.gradient-blob-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.4) 0%, transparent 60%);
+  top: 40%;
+  right: -8%;
+  animation: blobFloat3 20s ease-in-out infinite;
+}
+
+@keyframes blobFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 40px) scale(1.1); }
+}
+
+@keyframes blobFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, -30px) scale(0.95); }
+}
+
+@keyframes blobFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-20px, 30px) scale(1.05); }
+}
+
+/* Dotted Pattern Overlay */
+.motion-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(26, 26, 46, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.6;
+}
+
+/* Glass shapes are now decorative cards feel */
+.glass-shape {
+  display: none;
+}
+
+/* Stars become subtle dots */
+.star-field { display: none; }
+.aurora-wave { display: none; }
+.mesh-gradient { display: none; }
+.motion-noise { display: none; }
+
+/* ============================================
+   DARK MODE - Navy Theme
+   ============================================ */
+
+.motion-bg-light {
+  /* Light mode uses cream (default) */
+  background: var(--cream-bg);
+}
+
+/* Dark mode is now navy */
+.dark .motion-bg:not(.motion-bg-light) {
+  background: var(--navy-dark);
+}
+
+.dark .motion-bg::before {
+  background: 
+    radial-gradient(ellipse 80% 60% at -10% 50%, rgba(180, 244, 97, 0.15), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 110% 50%, rgba(180, 244, 97, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 110%, rgba(180, 244, 97, 0.08), transparent 50%);
+}
+
+.dark .gradient-blob-1 {
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.25) 0%, rgba(180, 244, 97, 0.08) 50%, transparent 70%);
+}
+
+.dark .gradient-blob-2 {
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.2) 0%, rgba(154, 224, 77, 0.06) 50%, transparent 70%);
+}
+
+.dark .gradient-blob-3 {
+  background: radial-gradient(circle, rgba(180, 244, 97, 0.15) 0%, transparent 60%);
+}
+
+.dark .motion-grid {
+  background-image: radial-gradient(circle, rgba(180, 244, 97, 0.1) 1px, transparent 1px);
+  opacity: 0.4;
+}
+
+

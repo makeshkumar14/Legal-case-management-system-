@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye } from 'lucide-react';
+import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine } from 'lucide-react';
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal, ConfirmModal } from '../../components/shared/Modal';
 import { QRCodeViewer } from '../../components/shared/QRCodeViewer';
+import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
 import { cases, advocates, analyticsData } from '../../data/mockData';
 
 export function CourtDashboard() {
@@ -12,6 +13,8 @@ export function CourtDashboard() {
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [searchId, setSearchId] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   const stats = [
     { label: 'Total Cases', value: analyticsData.totalCases, icon: FileText, color: 'bg-red-500', iconColor: 'text-white', trend: '+12%', up: true },
@@ -30,10 +33,31 @@ export function CourtDashboard() {
           </motion.h1>
           <p className="text-[#6b6b80]">Manage cases, hearings, and court operations</p>
         </div>
-        <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
-          className="flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">
-          <Plus className="w-5 h-5" />Register New Case
-        </motion.button>
+
+        <div className="flex items-center gap-3">
+          {/* Search */}
+          <div className="relative flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
+              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search cases..."
+                className="w-64 pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition-all shadow-sm" />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowScanner(true)}
+              className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+              title="Scan QR Code"
+            >
+              <ScanLine className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">
+            <Plus className="w-5 h-5" />Register New Case
+          </motion.button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -67,12 +91,12 @@ export function CourtDashboard() {
               <AreaChart data={analyticsData.casesTrend}>
                 <defs>
                   <linearGradient id="colorFiled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1a1a2e" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#1a1a2e" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#1a1a2e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#1a1a2e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(107,107,128,0.1)" />
@@ -191,7 +215,7 @@ export function CourtDashboard() {
         {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.caseNumber} /></div>}
       </Modal>
 
-      <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => {}} title="Delete Case" message="Are you sure you want to delete this case? This action cannot be undone." confirmText="Delete" variant="danger" />
+      <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => { }} title="Delete Case" message="Are you sure you want to delete this case? This action cannot be undone." confirmText="Delete" variant="danger" />
 
       <Modal isOpen={showCaseModal} onClose={() => setShowCaseModal(false)} title="Register New Case" size="lg">
         <form className="space-y-5">
@@ -219,6 +243,16 @@ export function CourtDashboard() {
           </div>
         </form>
       </Modal>
+
+      {/* QR Scanner */}
+      <QRCodeScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={(value) => {
+          const id = value.replace('LCMS:', '');
+          setSearchId(id);
+        }}
+      />
     </div>
   );
 }

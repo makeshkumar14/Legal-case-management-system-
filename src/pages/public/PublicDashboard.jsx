@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, FileText, Calendar, Clock, Bell, ChevronRight, QrCode, AlertCircle, CheckCircle, Timer, TrendingUp } from 'lucide-react';
+import { Search, FileText, Calendar, Clock, Bell, ChevronRight, QrCode, AlertCircle, CheckCircle, Timer, TrendingUp, ScanLine } from 'lucide-react';
 import { cases, notifications } from '../../data/mockData';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal } from '../../components/shared/Modal';
 import { QRCodeViewer } from '../../components/shared/QRCodeViewer';
 import { Timeline } from '../../components/shared/Timeline';
 import { CountdownTimer } from '../../components/shared/CountdownTimer';
+import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
 
 export function PublicDashboard() {
   const [searchId, setSearchId] = useState('');
   const [selectedCase, setSelectedCase] = useState(null);
   const [showQR, setShowQR] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const userCases = cases.slice(0, 3);
   const nextHearing = cases[0]?.hearings?.[0];
@@ -33,12 +35,23 @@ export function PublicDashboard() {
           </motion.h1>
           <p className="text-[#6b6b80]">Track your cases and upcoming hearings</p>
         </div>
-        
+
         {/* Search */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="relative w-full lg:w-80">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
-          <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search by Citizen ID..."
-            className="w-full pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all shadow-sm" />
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="relative w-full lg:w-96 flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
+            <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search by Citizen ID..."
+              className="w-full pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all shadow-sm" />
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowScanner(true)}
+            className="p-3 bg-[#b4f461] hover:bg-[#a3e350] text-[#1a1a2e] rounded-xl shadow-lg shadow-[#b4f461]/25 hover:shadow-[#b4f461]/40 transition-all"
+            title="Scan QR Code"
+          >
+            <ScanLine className="w-5 h-5" />
+          </motion.button>
         </motion.div>
       </div>
 
@@ -67,16 +80,15 @@ export function PublicDashboard() {
             <h2 className="text-lg font-semibold text-[#1a1a2e] dark:text-white">Your Cases</h2>
             <button className="text-sm text-[#2d6a25] hover:text-[#1a5a1a] font-medium flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></button>
           </div>
-          
+
           <div className="space-y-3">
             {userCases.map((c, i) => (
               <motion.div key={c.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.1 }}
                 onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 shadow-sm ${
-                  selectedCase?.id === c.id 
-                    ? 'bg-[#b4f461]/10 border-[#b4f461]/50' 
-                    : 'bg-white/80 dark:bg-[#232338] border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/50'
-                }`}
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 shadow-sm ${selectedCase?.id === c.id
+                  ? 'bg-[#b4f461]/10 border-[#b4f461]/50'
+                  : 'bg-white/80 dark:bg-[#232338] border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/50'
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -155,6 +167,17 @@ export function PublicDashboard() {
       <Modal isOpen={!!showQR} onClose={() => setShowQR(false)} title="Case QR Code" size="sm">
         {showQR && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${showQR.id}`} title={showQR.caseNumber} /></div>}
       </Modal>
+
+      {/* QR Scanner */}
+      <QRCodeScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={(value) => {
+          // Extract ID from scanned QR code (format: LCMS:caseId or just the ID)
+          const id = value.replace('LCMS:', '');
+          setSearchId(id);
+        }}
+      />
     </div>
   );
 }

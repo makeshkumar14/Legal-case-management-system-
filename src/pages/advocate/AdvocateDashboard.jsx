@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal } from 'lucide-react';
+import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal, Search, ScanLine } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import { cases, tasks, evidences, calendarEvents } from '../../data/mockData';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { useTheme } from '../../context/ThemeContext';
+import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
 
 export function AdvocateDashboard() {
   const [filter, setFilter] = useState('all');
+  const [searchId, setSearchId] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
   const { isDark } = useTheme();
   const advocateCases = cases.slice(0, 4);
   const filteredCases = filter === 'all' ? advocateCases : advocateCases.filter(c => c.priority === filter);
@@ -36,10 +39,31 @@ export function AdvocateDashboard() {
           </motion.h1>
           <p className="text-[#6b6b80]">Manage your cases, hearings, and evidence</p>
         </div>
-        <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
-          <Plus className="w-5 h-5" />New Case
-        </motion.button>
+
+        <div className="flex items-center gap-3">
+          {/* Search */}
+          <div className="relative flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
+              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search cases..."
+                className="w-64 pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all shadow-sm" />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowScanner(true)}
+              className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all"
+              title="Scan QR Code"
+            >
+              <ScanLine className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
+            <Plus className="w-5 h-5" />New Case
+          </motion.button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -158,6 +182,16 @@ export function AdvocateDashboard() {
           />
         </div>
       </motion.div>
+
+      {/* QR Scanner */}
+      <QRCodeScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={(value) => {
+          const id = value.replace('LCMS:', '');
+          setSearchId(id);
+        }}
+      />
     </div>
   );
 }

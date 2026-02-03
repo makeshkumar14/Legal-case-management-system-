@@ -14,16 +14,16 @@ export function AdvocateDashboard() {
   const filteredCases = filter === 'all' ? advocateCases : advocateCases.filter(c => c.priority === filter);
 
   const stats = [
-    { label: 'Active Cases', value: '12', icon: FileText, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '+2' },
-    { label: "Today's Hearings", value: '3', icon: Calendar, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: 'On track' },
-    { label: 'Pending Tasks', value: '8', icon: Clock, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '2 urgent' },
-    { label: 'Evidence', value: '24', icon: Upload, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '3 pending' },
+    { label: 'Active Cases', value: '12', icon: FileText, color: 'bg-orange-500', iconColor: 'text-white', trend: '+2' },
+    { label: "Today's Hearings", value: '3', icon: Calendar, color: 'bg-orange-500', iconColor: 'text-white', trend: 'On track' },
+    { label: 'Pending Tasks', value: '8', icon: Clock, color: 'bg-orange-500', iconColor: 'text-white', trend: '2 urgent' },
+    { label: 'Evidence', value: '24', icon: Upload, color: 'bg-orange-500', iconColor: 'text-white', trend: '3 pending' },
   ];
 
   const priorityColors = {
     high: 'border-l-red-500 bg-red-500/5',
     medium: 'border-l-amber-500 bg-amber-500/5',
-    low: 'border-l-[#b4f461] bg-[#b4f461]/5',
+    low: 'border-l-orange-500 bg-orange-500/5',
   };
 
   return (
@@ -37,7 +37,7 @@ export function AdvocateDashboard() {
           <p className="text-[#6b6b80]">Manage your cases, hearings, and evidence</p>
         </div>
         <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-5 py-3 bg-[#b4f461] hover:bg-[#9ae04d] text-[#1a1a2e] font-bold rounded-xl shadow-lg shadow-[#b4f461]/25 hover:shadow-[#b4f461]/40 transition-all">
+          className="flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
           <Plus className="w-5 h-5" />New Case
         </motion.button>
       </div>
@@ -46,13 +46,13 @@ export function AdvocateDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/50 transition-all group shadow-sm">
+            className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-orange-500/50 transition-all group shadow-sm">
             <div className={`w-11 h-11 rounded-xl ${stat.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform`}>
               <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
             </div>
             <p className="text-2xl font-bold text-[#1a1a2e] dark:text-white mb-1">{stat.value}</p>
             <p className="text-sm text-[#6b6b80]">{stat.label}</p>
-            <p className="text-xs text-[#b4f461] mt-2">{stat.trend}</p>
+            <p className="text-xs text-orange-600 font-medium mt-2">{stat.trend}</p>
           </motion.div>
         ))}
       </div>
@@ -65,7 +65,7 @@ export function AdvocateDashboard() {
             <div className="flex items-center gap-2">
               {['all', 'high', 'medium'].map(f => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filter === f ? 'bg-[#b4f461]/20 text-[#1a1a2e] dark:text-[#b4f461]' : 'text-[#6b6b80] hover:text-[#1a1a2e] dark:hover:text-white'}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filter === f ? 'bg-orange-500/20 text-orange-700' : 'text-[#6b6b80] hover:text-[#1a1a2e] dark:hover:text-white'}`}>
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}

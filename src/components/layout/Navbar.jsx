@@ -60,7 +60,7 @@ export function Navbar() {
                 className="absolute right-0 top-12 w-80 bg-white dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-2xl shadow-2xl overflow-hidden">
                 <div className="p-4 border-b border-[#e5e4df] dark:border-[#2d2d45] flex justify-between items-center">
                   <span className="font-semibold text-[#1a1a2e] dark:text-white text-sm">Notifications</span>
-                  <span className="text-xs text-[#b4f461] cursor-pointer hover:underline">Mark all read</span>
+                  <span className="text-xs text-[#2d6a25] font-medium cursor-pointer hover:underline">Mark all read</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
                   {notifications.slice(0, 4).map(n => (
@@ -79,12 +79,18 @@ export function Navbar() {
         <div className="relative">
           <motion.button whileHover={{ scale: 1.02 }} onClick={() => setShowProfile(!showProfile)}
             className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] hover:border-[#b4f461] transition-colors">
-            <div className="w-8 h-8 rounded-lg bg-[#b4f461] flex items-center justify-center text-[#1a1a2e] text-sm font-bold">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold ${
+              user?.role === 'court' ? 'bg-red-500' : 
+              user?.role === 'advocate' ? 'bg-orange-500' : 'bg-[#b4f461] text-[#1a1a2e]'
+            }`}>
               {user?.name?.charAt(0) || 'U'}
             </div>
             <div className="text-left hidden md:block">
               <p className="text-sm font-medium text-[#1a1a2e] dark:text-white leading-tight">{user?.name || 'User'}</p>
-              <p className="text-[10px] text-[#b4f461] capitalize">{user?.role}</p>
+              <p className={`text-[10px] font-medium capitalize ${
+                user?.role === 'court' ? 'text-red-600' : 
+                user?.role === 'advocate' ? 'text-orange-600' : 'text-[#2d6a25]'
+              }`}>{user?.role}</p>
             </div>
             <ChevronDown className="w-3 h-3 text-[#6b6b80] hidden md:block" />
           </motion.button>

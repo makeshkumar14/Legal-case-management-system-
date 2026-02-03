@@ -54,7 +54,7 @@ export function PublicDashboard() {
               </div>
               <p className="text-2xl font-bold text-[#1a1a2e] dark:text-white mb-1">{stat.value}</p>
               <p className="text-sm text-[#6b6b80]">{stat.label}</p>
-              <p className="text-xs text-[#b4f461] mt-2">{stat.change}</p>
+              <p className="text-xs text-[#2d6a25] font-medium mt-2">{stat.change}</p>
             </div>
           </motion.div>
         ))}
@@ -65,7 +65,7 @@ export function PublicDashboard() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[#1a1a2e] dark:text-white">Your Cases</h2>
-            <button className="text-sm text-[#b4f461] hover:text-[#9ae04d] flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></button>
+            <button className="text-sm text-[#2d6a25] hover:text-[#1a5a1a] font-medium flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></button>
           </div>
           
           <div className="space-y-3">
@@ -81,7 +81,7 @@ export function PublicDashboard() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-mono text-[#b4f461] bg-[#b4f461]/10 px-2 py-1 rounded-lg">{c.caseNumber}</span>
+                      <span className="text-xs font-mono text-[#2d6a25] bg-[#b4f461]/20 px-2 py-1 rounded-lg">{c.caseNumber}</span>
                       <StatusBadge status={c.status} size="sm" />
                     </div>
                     <h3 className="text-[#1a1a2e] dark:text-white font-medium mb-1 truncate">{c.title}</h3>
@@ -138,7 +138,7 @@ export function PublicDashboard() {
                 <motion.div key={n.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + i * 0.1 }}
                   className={`p-3 rounded-xl ${n.type === 'urgent' ? 'bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/20' : 'bg-[#f7f6f3] dark:bg-[#1a1a2e]'}`}>
                   <div className="flex items-start gap-3">
-                    {n.type === 'urgent' ? <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" /> : <CheckCircle className="w-4 h-4 text-[#b4f461] mt-0.5" />}
+                    {n.type === 'urgent' ? <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" /> : <CheckCircle className="w-4 h-4 text-[#2d6a25] mt-0.5" />}
                     <div>
                       <p className="text-sm font-medium text-[#1a1a2e] dark:text-white">{n.title}</p>
                       <p className="text-xs text-[#6b6b80] mt-1">{n.time}</p>

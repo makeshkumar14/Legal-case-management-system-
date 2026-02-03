@@ -14,10 +14,10 @@ export function CourtDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const stats = [
-    { label: 'Total Cases', value: analyticsData.totalCases, icon: FileText, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '+12%', up: true },
-    { label: 'Pending', value: analyticsData.pendingCases, icon: Clock, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '-5%', up: false },
-    { label: 'Advocates', value: advocates.length, icon: Users, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '+2', up: true },
-    { label: "Today's Hearings", value: analyticsData.todayHearings, icon: Gavel, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', trend: '3 pending', up: null },
+    { label: 'Total Cases', value: analyticsData.totalCases, icon: FileText, color: 'bg-red-500', iconColor: 'text-white', trend: '+12%', up: true },
+    { label: 'Pending', value: analyticsData.pendingCases, icon: Clock, color: 'bg-red-500', iconColor: 'text-white', trend: '-5%', up: false },
+    { label: 'Advocates', value: advocates.length, icon: Users, color: 'bg-red-500', iconColor: 'text-white', trend: '+2', up: true },
+    { label: "Today's Hearings", value: analyticsData.todayHearings, icon: Gavel, color: 'bg-red-500', iconColor: 'text-white', trend: '3 pending', up: null },
   ];
 
   return (
@@ -31,7 +31,7 @@ export function CourtDashboard() {
           <p className="text-[#6b6b80]">Manage cases, hearings, and court operations</p>
         </div>
         <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
-          className="flex items-center gap-2 px-5 py-3 bg-[#b4f461] hover:bg-[#9ae04d] text-[#1a1a2e] font-bold rounded-xl shadow-lg shadow-[#b4f461]/25 hover:shadow-[#b4f461]/40 transition-all">
+          className="flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">
           <Plus className="w-5 h-5" />Register New Case
         </motion.button>
       </div>
@@ -40,13 +40,13 @@ export function CourtDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/50 transition-all group shadow-sm">
+            className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-red-500/50 transition-all group shadow-sm">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-11 h-11 rounded-xl ${stat.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
                 <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
               {stat.up !== null && (
-                <span className={`text-xs font-medium px-2 py-1 rounded-lg ${stat.up ? 'bg-[#b4f461]/20 text-[#1a1a2e] dark:text-[#b4f461]' : 'bg-red-500/10 text-red-400'}`}>
+                <span className={`text-xs font-medium px-2 py-1 rounded-lg ${stat.up ? 'bg-red-500/20 text-red-700' : 'bg-red-500/10 text-red-400'}`}>
                   {stat.trend}
                 </span>
               )}
@@ -67,8 +67,8 @@ export function CourtDashboard() {
               <AreaChart data={analyticsData.casesTrend}>
                 <defs>
                   <linearGradient id="colorFiled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#b4f461" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#b4f461" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#1a1a2e" stopOpacity={0.3}/>
@@ -79,7 +79,7 @@ export function CourtDashboard() {
                 <XAxis dataKey="month" stroke="#6b6b80" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#6b6b80" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2d2d45', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }} />
-                <Area type="monotone" dataKey="filed" stroke="#b4f461" strokeWidth={2} fill="url(#colorFiled)" />
+                <Area type="monotone" dataKey="filed" stroke="#ef4444" strokeWidth={2} fill="url(#colorFiled)" />
                 <Area type="monotone" dataKey="closed" stroke="#1a1a2e" strokeWidth={2} fill="url(#colorClosed)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -103,13 +103,13 @@ export function CourtDashboard() {
                   {cases.slice(0, 5).map((c, i) => (
                     <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
                       className="border-b border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#f7f6f3] dark:hover:bg-[#1a1a2e] transition-colors group">
-                      <td className="py-4 px-4 text-sm text-[#b4f461] font-mono">{c.caseNumber}</td>
+                      <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{c.caseNumber}</td>
                       <td className="py-4 px-4 text-sm text-[#1a1a2e] dark:text-white max-w-xs truncate">{c.title}</td>
                       <td className="py-4 px-4"><StatusBadge status={c.status} size="sm" /></td>
                       <td className="py-4 px-4">
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setSelectedCase(c); setShowQRModal(true); }} className="p-2 rounded-lg hover:bg-[#b4f461]/20 text-[#6b6b80] hover:text-[#b4f461] transition-colors"><QrCode className="w-4 h-4" /></button>
-                          <button className="p-2 rounded-lg hover:bg-[#b4f461]/20 text-[#6b6b80] hover:text-[#b4f461] transition-colors"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => { setSelectedCase(c); setShowQRModal(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><QrCode className="w-4 h-4" /></button>
+                          <button className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><Eye className="w-4 h-4" /></button>
                           <button className="p-2 rounded-lg hover:bg-amber-500/20 text-[#6b6b80] hover:text-amber-400 transition-colors"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => setShowDeleteConfirm(true)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
@@ -155,8 +155,8 @@ export function CourtDashboard() {
                 <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#b4f461" />
-                    <stop offset="100%" stopColor="#9ae04d" />
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#dc2626" />
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -169,7 +169,7 @@ export function CourtDashboard() {
             <div className="space-y-3">
               {advocates.slice(0, 3).map((a, i) => (
                 <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-[#1a1a2e] dark:bg-[#b4f461] flex items-center justify-center text-[#b4f461] dark:text-[#1a1a2e] text-sm font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center text-white text-sm font-bold">
                     {a.name.split(' ').pop().charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -177,7 +177,7 @@ export function CourtDashboard() {
                     <p className="text-xs text-[#6b6b80]">{a.activeCases} active cases</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm text-[#b4f461]">★ {a.rating}</span>
+                    <span className="text-sm text-red-600 font-semibold">★ {a.rating}</span>
                   </div>
                 </div>
               ))}
@@ -197,25 +197,25 @@ export function CourtDashboard() {
         <form className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Case Title</label>
-            <input type="text" className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461]" placeholder="Enter case title" />
+            <input type="text" className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Enter case title" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Case Type</label>
-              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461]">
+              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
                 <option className="bg-white dark:bg-[#1a1a2e]">Civil</option><option className="bg-white dark:bg-[#1a1a2e]">Criminal</option><option className="bg-white dark:bg-[#1a1a2e]">Family</option><option className="bg-white dark:bg-[#1a1a2e]">Consumer</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Assign Advocate</label>
-              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461]">
+              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
                 {advocates.map(a => <option key={a.id} className="bg-white dark:bg-[#1a1a2e]">{a.name}</option>)}
               </select>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <button type="button" onClick={() => setShowCaseModal(false)} className="px-5 py-2.5 rounded-xl bg-[#f7f6f3] dark:bg-[#232338] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] text-[#6b6b80] font-medium transition-colors border-2 border-[#e5e4df] dark:border-[#2d2d45]">Cancel</button>
-            <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#b4f461] hover:bg-[#9ae04d] text-[#1a1a2e] font-bold shadow-lg shadow-[#b4f461]/25 hover:shadow-[#b4f461]/40 transition-all">Create Case</button>
+            <button type="submit" className="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">Create Case</button>
           </div>
         </form>
       </Modal>

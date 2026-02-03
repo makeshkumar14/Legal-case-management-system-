@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/shared/Toast';
 import { DashboardLayout } from './layouts/DashboardLayout';
@@ -7,6 +7,23 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { PublicDashboard } from './pages/public/PublicDashboard';
 import { AdvocateDashboard } from './pages/advocate/AdvocateDashboard';
 import { CourtDashboard } from './pages/court/CourtDashboard';
+
+// Modern Cream & Lime Green Background Component
+function MotionBackground() {
+  const { isDark } = useTheme();
+  
+  return (
+    <div className={`motion-bg ${!isDark ? 'motion-bg-light' : ''}`}>
+      {/* Lime Green Gradient Blobs */}
+      <div className="gradient-blob gradient-blob-1" />
+      <div className="gradient-blob gradient-blob-2" />
+      <div className="gradient-blob gradient-blob-3" />
+      
+      {/* Dotted Grid Pattern */}
+      <div className="motion-grid" />
+    </div>
+  );
+}
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, isAuthenticated } = useAuth();
@@ -58,7 +75,8 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-            <div className="min-h-screen bg-slate-100 dark:bg-[#030712] text-slate-900 dark:text-white">
+            <MotionBackground />
+            <div className="min-h-screen bg-transparent text-[#1a1a2e] dark:text-white relative z-10">
               <AppRoutes />
             </div>
           </ToastProvider>
@@ -67,3 +85,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

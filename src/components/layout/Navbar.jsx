@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Sun, Moon, Search, ChevronDown, LogOut, User, ChevronRight } from 'lucide-react';
+import { Bell, Search, ChevronDown, LogOut, User, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { notifications } from '../../data/mockData';
@@ -45,11 +45,7 @@ export function Navbar() {
             className="w-48 focus:w-64 pl-10 pr-4 py-2 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-sm text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/30 focus:border-[#b4f461] transition-all duration-300" />
         </div>
 
-        {/* Theme */}
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] hover:border-[#b4f461] transition-colors">
-          {isDark ? <Sun className="w-4 h-4 text-[#b4f461]" /> : <Moon className="w-4 h-4 text-[#1a1a2e]" />}
-        </motion.button>
+        {/* Theme toggle removed - light mode only */}
 
         {/* Notifications */}
         <div className="relative">

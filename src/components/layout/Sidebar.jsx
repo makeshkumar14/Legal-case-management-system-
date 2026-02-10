@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, FileText, Calendar, Upload, Users, Settings, ChevronLeft, Scale, ClipboardList, BarChart3, Search, QrCode, Gavel } from 'lucide-react';
+import { LayoutDashboard, FileText, Calendar, Upload, Users, Settings, ChevronLeft, Scale, ClipboardList, BarChart3, Search, QrCode, Gavel, MessageSquare, Bell, CheckSquare, TrendingUp, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../layouts/DashboardLayout';
 import clsx from 'clsx';
@@ -10,22 +10,30 @@ const menuConfig = {
     { path: '/public', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/public/cases', icon: FileText, label: 'My Cases' },
     { path: '/public/search', icon: Search, label: 'Search Case' },
-    { path: '/public/notifications', icon: ClipboardList, label: 'Notifications' },
+    { path: '/public/notifications', icon: Bell, label: 'Notifications' },
+    { path: '/public/messages', icon: MessageSquare, label: 'Messages' },
   ],
   advocate: [
     { path: '/advocate', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/advocate/cases', icon: FileText, label: 'Case List' },
-    { path: '/advocate/evidence', icon: Upload, label: 'Evidence' },
+    { path: '/advocate/evidence', icon: Upload, label: 'Documents' },
     { path: '/advocate/calendar', icon: Calendar, label: 'Calendar' },
-    { path: '/advocate/notes', icon: ClipboardList, label: 'Notes & Tasks' },
+    { path: '/advocate/notes', icon: ClipboardList, label: 'Legal Diary' },
+    { path: '/advocate/tasks', icon: CheckSquare, label: 'Task Board' },
+    { path: '/advocate/performance', icon: TrendingUp, label: 'Performance' },
+    { path: '/advocate/messages', icon: MessageSquare, label: 'Messages' },
+    { path: '/advocate/notifications', icon: Bell, label: 'Notifications' },
   ],
   court: [
     { path: '/court', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/court/cases', icon: FileText, label: 'Case Management' },
     { path: '/court/hearings', icon: Gavel, label: 'Hearings' },
+    { path: '/court/rooms', icon: Building2, label: 'Court Rooms' },
     { path: '/court/advocates', icon: Users, label: 'Advocates' },
-    { path: '/court/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/court/analytics', icon: BarChart3, label: 'Reports' },
     { path: '/court/qr', icon: QrCode, label: 'QR Generator' },
+    { path: '/court/messages', icon: MessageSquare, label: 'Messages' },
+    { path: '/court/notifications', icon: Bell, label: 'Notifications' },
   ],
 };
 
@@ -125,7 +133,10 @@ export function Sidebar() {
 
       {/* Settings */}
       <div className="p-3 border-t border-[#e5e4df]">
-        <NavLink to="/settings" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#1a1a2e] hover:bg-[#efeee9] hover:text-[#1a1a2e] transition-all overflow-hidden">
+        <NavLink to={`/${user?.role}/settings`} className={({ isActive }) => clsx(
+          'flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all overflow-hidden',
+          isActive ? `${colors.primary} ${colors.primaryText}` : 'text-[#1a1a2e] hover:bg-[#efeee9] hover:text-[#1a1a2e]'
+        )}>
           <Settings className="w-5 h-5 flex-shrink-0" />
           {!isCollapsed && <span className="text-sm font-medium whitespace-nowrap">Settings</span>}
         </NavLink>
@@ -133,4 +144,3 @@ export function Sidebar() {
     </motion.aside>
   );
 }
-

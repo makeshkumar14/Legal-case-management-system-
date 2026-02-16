@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Check, Trash2, Calendar, FileText, Gavel, AlertTriangle, Info, Clock, CheckCheck } from 'lucide-react';
-import { notifications as mockNotifications } from '../../data/mockData';
+import { notificationsAPI } from '../../services/api';
 
 const typeConfig = {
   hearing: { icon: Gavel, color: 'bg-amber-500', bg: 'bg-amber-500/10' },
@@ -12,8 +12,24 @@ const typeConfig = {
 };
 
 export function NotificationCenter() {
-  const [items, setItems] = useState(mockNotifications.map((n, i) => ({ ...n, id: n.id || i, read: i > 2 })));
+  const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationsAPI.list();
+        const data = res.data.notifications || res.data || [];
+        setItems(data.map((n, i) => ({ ...n, id: n.id || i, read: n.read || i > 2 })));
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const filtered = filter === 'all' ? items : filter === 'unread' ? items.filter(n => !n.read) : items.filter(n => n.type === 'urgent');
   const unreadCount = items.filter(n => !n.read).length;

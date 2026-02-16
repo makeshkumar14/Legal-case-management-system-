@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, User, Briefcase, Building2, Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { users } from '../../data/mockData';
+import { authAPI } from '../../services/api';
 
 const roles = [
   { id: 'public', label: 'Citizen Portal', icon: User, desc: 'Track cases & hearings' },
@@ -11,22 +11,46 @@ const roles = [
   { id: 'court', label: 'Court Administration', icon: Building2, desc: 'Full administrative access' },
 ];
 
+const defaultCredentials = {
+  public: { email: 'rajesh@example.com', password: 'password123' },
+  advocate: { email: 'priya@example.com', password: 'password123' },
+  court: { email: 'court@example.com', password: 'password123' },
+};
+
 export function LoginPage() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleRoleSelect = (roleId) => {
+    setSelectedRole(roleId);
+    const creds = defaultCredentials[roleId];
+    if (creds) {
+      setEmail(creds.email);
+      setPassword(creds.password);
+    }
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const user = users[selectedRole];
-    if (user) { login(user); navigate(`/${selectedRole}`); }
-    setIsLoading(false);
+    setError('');
+    try {
+      const res = await authAPI.login(email, password);
+      const { user, token } = res.data;
+      login(user, token);
+      navigate(`/${user.role}`);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,7 +84,7 @@ export function LoginPage() {
                 transition={{ delay: 0.4 + i * 0.1 }}
                 whileHover={{ scale: 1.02, x: 6 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedRole(role.id)}
+                onClick={() => handleRoleSelect(role.id)}
                 className={`w-full p-5 rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                   selectedRole === role.id
                     ? 'bg-[#1a1a2e] border-[#b4f461] shadow-xl'
@@ -114,6 +138,12 @@ export function LoginPage() {
                     </div>
                   </div>
                   
+                  {error && (
+                    <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                       <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Email Address</label>
@@ -150,7 +180,7 @@ export function LoginPage() {
                       {isLoading ? <div className="w-5 h-5 border-2 border-[#1a1a2e]/30 border-t-[#1a1a2e] rounded-full animate-spin" /> : <><span>Sign In</span><ArrowRight className="w-5 h-5" /></>}
                     </motion.button>
                   </form>
-                  <p className="mt-6 text-center text-sm text-[#6b6b80]">Demo mode — Enter any credentials</p>
+                  <p className="mt-6 text-center text-sm text-[#6b6b80]">Credentials auto-filled • Connected to MySQL</p>
                 </motion.div>
               ) : (
                 <motion.div key="prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

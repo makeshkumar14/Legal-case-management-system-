@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, ChevronDown, LogOut, User, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { notifications } from '../../data/mockData';
+import { notificationsAPI } from '../../services/api';
 import clsx from 'clsx';
 
 export function Navbar() {
@@ -14,6 +14,20 @@ export function Navbar() {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationsAPI.list();
+        setNotifications(res.data.notifications || res.data || []);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const pathSegments = location.pathname.split('/').filter(Boolean);

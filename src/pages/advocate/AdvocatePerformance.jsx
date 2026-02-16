@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Award, Star, Target, BarChart3, Calendar, Briefcase, Trophy, Zap } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, Legend } from 'recharts';
-import { cases } from '../../data/mockData';
+import { casesAPI } from '../../services/api';
 
 const monthlyData = [
   { month: 'Jul', won: 8, lost: 2, settled: 3 }, { month: 'Aug', won: 10, lost: 1, settled: 4 },
@@ -30,6 +30,20 @@ const achievements = [
 ];
 
 export function AdvocatePerformance() {
+  const [cases, setCases] = useState([]);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const res = await casesAPI.list();
+        setCases(res.data.cases || res.data || []);
+      } catch (err) {
+        console.error('Error fetching cases:', err);
+      }
+    };
+    fetchCases();
+  }, []);
+
   const totalCases = cases.length;
   const stats = [
     { label: 'Total Cases', value: totalCases, icon: Briefcase, color: 'bg-blue-500', change: '+12 this month' },

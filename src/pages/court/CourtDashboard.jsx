@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine } from 'lucide-react';
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -6,7 +6,7 @@ import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal, ConfirmModal } from '../../components/shared/Modal';
 import { QRCodeViewer } from '../../components/shared/QRCodeViewer';
 import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
-import { cases, advocates, analyticsData } from '../../data/mockData';
+import { casesAPI, analyticsAPI } from '../../services/api';
 
 export function CourtDashboard() {
   const [showCaseModal, setShowCaseModal] = useState(false);
@@ -16,12 +16,56 @@ export function CourtDashboard() {
   const [searchId, setSearchId] = useState('');
   const [showScanner, setShowScanner] = useState(false);
 
+  const [cases, setCases] = useState([]);
+  const [analyticsData, setAnalyticsData] = useState({ totalCases: 0, pendingCases: 0, todayHearings: 0, casesTrend: [], casesByType: [], dailyHearings: [] });
+  const [advocates, setAdvocates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [casesRes, dashRes, trendRes, typeRes, hearingsRes, perfRes] = await Promise.all([
+          casesAPI.list(),
+          analyticsAPI.dashboard(),
+          analyticsAPI.casesTrend(),
+          analyticsAPI.casesByType(),
+          analyticsAPI.dailyHearings(),
+          analyticsAPI.advocatePerformance()
+        ]);
+        setCases(casesRes.data.cases || casesRes.data || []);
+        const dash = dashRes.data;
+        setAnalyticsData({
+          totalCases: dash.total_cases || 0,
+          pendingCases: dash.pending_cases || 0,
+          todayHearings: dash.today_hearings || 0,
+          casesTrend: trendRes.data.trend || trendRes.data || [],
+          casesByType: (typeRes.data.types || typeRes.data || []).map(t => ({ ...t, color: t.color || ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'][Math.floor(Math.random() * 5)] })),
+          dailyHearings: hearingsRes.data.hearings || hearingsRes.data || [],
+        });
+        setAdvocates(perfRes.data.advocates || perfRes.data || []);
+      } catch (err) {
+        console.error('Error fetching court data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const stats = [
     { label: 'Total Cases', value: analyticsData.totalCases, icon: FileText, color: 'bg-red-500', iconColor: 'text-white', trend: '+12%', up: true },
     { label: 'Pending', value: analyticsData.pendingCases, icon: Clock, color: 'bg-red-500', iconColor: 'text-white', trend: '-5%', up: false },
-    { label: 'Advocates', value: advocates.length, icon: Users, color: 'bg-red-500', iconColor: 'text-white', trend: '+2', up: true },
-    { label: "Today's Hearings", value: analyticsData.todayHearings, icon: Gavel, color: 'bg-red-500', iconColor: 'text-white', trend: '3 pending', up: null },
+    { label: 'Advocates', value: advocates.length, icon: Users, color: 'bg-red-500', iconColor: 'text-white', trend: `${advocates.length}`, up: true },
+    { label: "Today's Hearings", value: analyticsData.todayHearings, icon: Gavel, color: 'bg-red-500', iconColor: 'text-white', trend: 'scheduled', up: null },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -35,7 +79,6 @@ export function CourtDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Search */}
           <div className="relative flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
@@ -127,7 +170,7 @@ export function CourtDashboard() {
                   {cases.slice(0, 5).map((c, i) => (
                     <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
                       className="border-b border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#f7f6f3] dark:hover:bg-[#1a1a2e] transition-colors group">
-                      <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{c.caseNumber}</td>
+                      <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{c.case_number || c.caseNumber}</td>
                       <td className="py-4 px-4 text-sm text-[#1a1a2e] dark:text-white max-w-xs truncate">{c.title}</td>
                       <td className="py-4 px-4"><StatusBadge status={c.status} size="sm" /></td>
                       <td className="py-4 px-4">
@@ -192,16 +235,16 @@ export function CourtDashboard() {
             <h3 className="font-semibold text-[#1a1a2e] dark:text-white mb-4">Top Advocates</h3>
             <div className="space-y-3">
               {advocates.slice(0, 3).map((a, i) => (
-                <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] transition-colors">
+                <div key={a.id || i} className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] transition-colors">
                   <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center text-white text-sm font-bold">
-                    {a.name.split(' ').pop().charAt(0)}
+                    {(a.name || 'A').split(' ').pop().charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-[#1a1a2e] dark:text-white font-medium truncate">{a.name}</p>
-                    <p className="text-xs text-[#6b6b80]">{a.activeCases} active cases</p>
+                    <p className="text-xs text-[#6b6b80]">{a.active_cases || a.activeCases || 0} active cases</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm text-red-600 font-semibold">★ {a.rating}</span>
+                    <span className="text-sm text-red-600 font-semibold">★ {a.rating || a.win_rate || '4.5'}</span>
                   </div>
                 </div>
               ))}
@@ -212,7 +255,7 @@ export function CourtDashboard() {
 
       {/* Modals */}
       <Modal isOpen={showQRModal} onClose={() => setShowQRModal(false)} title="Case QR Code" size="sm">
-        {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.caseNumber} /></div>}
+        {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.case_number || selectedCase.caseNumber} /></div>}
       </Modal>
 
       <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => { }} title="Delete Case" message="Are you sure you want to delete this case? This action cannot be undone." confirmText="Delete" variant="danger" />

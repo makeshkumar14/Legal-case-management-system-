@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, X, ChevronDown, Calendar, FileText, AlertTriangle, Clock } from 'lucide-react';
-import { cases } from '../../data/mockData';
+import { casesAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -19,14 +19,30 @@ export function AdvancedSearchPage() {
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [sortBy, setSortBy] = useState('filingDate');
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const res = await casesAPI.list();
+        setCases(res.data.cases || res.data || []);
+      } catch (err) {
+        console.error('Error fetching cases:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const filtered = cases.filter(c => {
-    if (query) { const q = query.toLowerCase(); if (![c.title, c.caseNumber, c.petitioner, c.respondent, c.description].some(f => f?.toLowerCase().includes(q))) return false; }
-    if (selectedType !== 'All Types' && c.caseType !== selectedType) return false;
+    if (query) { const q = query.toLowerCase(); if (![c.title, c.case_number || c.caseNumber, c.petitioner, c.respondent, c.description].some(f => f?.toLowerCase().includes(q))) return false; }
+    if (selectedType !== 'All Types' && c.case_type !== selectedType && c.caseType !== selectedType) return false;
     if (selectedPriority !== 'All' && c.priority !== selectedPriority) return false;
     if (selectedStatus !== 'All' && c.status !== selectedStatus) return false;
     return true;
-  }).sort((a, b) => sortBy === 'title' ? a.title.localeCompare(b.title) : new Date(b.filingDate) - new Date(a.filingDate));
+  }).sort((a, b) => sortBy === 'title' ? a.title.localeCompare(b.title) : new Date(b.filing_date || b.filingDate) - new Date(a.filing_date || a.filingDate));
 
   const activeFilters = [selectedType !== 'All Types', selectedPriority !== 'All', selectedStatus !== 'All'].filter(Boolean).length;
   const clearFilters = () => { setSelectedType('All Types'); setSelectedPriority('All'); setSelectedStatus('All'); };

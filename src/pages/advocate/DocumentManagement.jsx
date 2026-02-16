@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileText, Search, Grid3X3, List, CheckCircle, Clock, X, File, Image } from 'lucide-react';
-import { evidences, cases } from '../../data/mockData';
+import { documentsAPI, casesAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 
 const fileTypeIcons = { pdf: FileText, image: Image, document: FileText };
@@ -13,6 +13,27 @@ export function DocumentManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [evidences, setEvidences] = useState([]);
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [docsRes, casesRes] = await Promise.all([
+          documentsAPI.list(),
+          casesAPI.list()
+        ]);
+        setEvidences(docsRes.data.documents || docsRes.data || []);
+        setCases(casesRes.data.cases || casesRes.data || []);
+      } catch (err) {
+        console.error('Error fetching documents:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filtered = evidences.filter(e => {
     if (filter === 'verified' && e.status !== 'verified') return false;
@@ -25,7 +46,7 @@ export function DocumentManagement() {
     { label: 'Total Documents', value: evidences.length, icon: FileText, color: 'bg-blue-500' },
     { label: 'Verified', value: evidences.filter(e => e.status === 'verified').length, icon: CheckCircle, color: 'bg-emerald-500' },
     { label: 'Pending', value: evidences.filter(e => e.status === 'pending').length, icon: Clock, color: 'bg-amber-500' },
-    { label: 'Total Size', value: '24.5 MB', icon: File, color: 'bg-purple-500' },
+    { label: 'Total Size', value: `${evidences.length * 3.5} MB`, icon: File, color: 'bg-purple-500' },
   ];
 
   return (

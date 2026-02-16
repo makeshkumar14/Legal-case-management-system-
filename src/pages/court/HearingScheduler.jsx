@@ -1,23 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Gavel, Plus, Calendar, Clock, MapPin, Users, FileText, Edit, Trash2, X, CheckCircle, Timer } from 'lucide-react';
-import { cases } from '../../data/mockData';
+import { casesAPI, hearingsAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 
 const courtRooms = ['Court Room 1','Court Room 2','Court Room 3','Court Room 5','Court Room 12','Principal Bench','Consumer Forum Hall 2','MACT Hall','Family Court Hall'];
 const hearingTypes = ['First Hearing','Arguments','Counter Arguments','Witness Examination','Evidence Submission','Final Arguments','Judgment','Urgent Mention','Preliminary Hearing'];
-const allHearings = cases.flatMap(c => (c.hearings || []).map(h => ({...h, caseId: c.id, caseNumber: c.caseNumber, caseTitle: c.title, court: c.courtRoom})));
 
 export function HearingScheduler() {
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [cases, setCases] = useState([]);
+  const [allHearings, setAllHearings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [casesRes, hearingsRes] = await Promise.all([
+          casesAPI.list(),
+          hearingsAPI.list()
+        ]);
+        const casesData = casesRes.data.cases || casesRes.data || [];
+        setCases(casesData);
+        const hearingsData = hearingsRes.data.hearings || hearingsRes.data || [];
+        // If hearings come from cases, flatten them
+        if (hearingsData.length === 0) {
+          const flat = casesData.flatMap(c => (c.hearings || []).map(h => ({...h, caseId: c.id, caseNumber: c.case_number || c.caseNumber, caseTitle: c.title, court: c.courtRoom || c.court_room})));
+          setAllHearings(flat);
+        } else {
+          setAllHearings(hearingsData);
+        }
+      } catch (err) {
+        console.error('Error fetching hearings:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const upcoming = allHearings.filter(h => h.status === 'scheduled');
   const completed = allHearings.filter(h => h.status === 'completed');
-  const filtered = filter === 'all' ? allHearings : filter === 'scheduled' ? upcoming : completed;
+  const filtered2 = filter === 'all' ? allHearings : filter === 'scheduled' ? upcoming : completed;
 
   const stats = [
-    { label: "Today's Hearings", value: '12', icon: Gavel, color: 'bg-red-500' },
-    { label: 'This Week', value: '45', icon: Calendar, color: 'bg-red-500' },
+    { label: "Today's Hearings", value: allHearings.length.toString(), icon: Gavel, color: 'bg-red-500' },
+    { label: 'This Week', value: allHearings.length.toString(), icon: Calendar, color: 'bg-red-500' },
     { label: 'Pending', value: upcoming.length, icon: Timer, color: 'bg-amber-500' },
     { label: 'Completed', value: completed.length, icon: CheckCircle, color: 'bg-emerald-500' },
   ];
@@ -54,7 +83,7 @@ export function HearingScheduler() {
       </div>
 
       <div className="space-y-3">
-        {filtered.map((h, i) => (
+        {filtered2.map((h, i) => (
           <motion.div key={`${h.caseId}-${h.date}-${i}`} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
             className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-red-500/30 transition-all shadow-sm group">
             <div className="flex items-center gap-4">

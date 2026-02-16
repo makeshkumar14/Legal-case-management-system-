@@ -1,20 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Plus, Search, Edit, Trash2, Calendar, X, Save, Clock } from 'lucide-react';
-import { caseNotes, cases } from '../../data/mockData';
+import { notesAPI, casesAPI } from '../../services/api';
 
 export function CaseNotesPage() {
-  const [notes, setNotes] = useState(caseNotes);
+  const [notes, setNotes] = useState([]);
+  const [cases, setCases] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCase, setSelectedCase] = useState('all');
   const [showEditor, setShowEditor] = useState(false);
   const [editNote, setEditNote] = useState(null);
   const [newContent, setNewContent] = useState('');
-  const [newCaseId, setNewCaseId] = useState(cases[0]?.id || '');
+  const [newCaseId, setNewCaseId] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [notesRes, casesRes] = await Promise.all([
+          notesAPI.list(),
+          casesAPI.list()
+        ]);
+        setNotes(notesRes.data.notes || notesRes.data || []);
+        const casesData = casesRes.data.cases || casesRes.data || [];
+        setCases(casesData);
+        if (casesData.length > 0) setNewCaseId(casesData[0].id);
+      } catch (err) {
+        console.error('Error fetching notes:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filtered = notes.filter(n => {
-    if (selectedCase !== 'all' && n.caseId !== selectedCase) return false;
-    if (searchQuery) return n.content.toLowerCase().includes(searchQuery.toLowerCase());
+    if (selectedCase !== 'all' && n.case_id !== selectedCase && n.caseId !== selectedCase) return false;
+    if (searchQuery) return (n.content || '').toLowerCase().includes(searchQuery.toLowerCase());
     return true;
   });
   const getCaseInfo = (caseId) => cases.find(c => c.id === caseId);

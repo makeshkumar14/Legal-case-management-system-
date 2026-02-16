@@ -8,20 +8,28 @@ export function AuthProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = (userData) => {
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem('token');
+  });
+
+  const login = (userData, jwtToken) => {
     setUser(userData);
+    setToken(jwtToken);
     localStorage.setItem('user', JSON.stringify(userData));
+    if (jwtToken) localStorage.setItem('token', jwtToken);
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

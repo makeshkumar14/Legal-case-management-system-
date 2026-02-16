@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Calendar, MapPin, Users, Clock, QrCode, X, ChevronRight, Scale, AlertCircle, CheckCircle, Timer } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { cases, evidences, caseNotes } from '../../data/mockData';
+import { casesAPI, documentsAPI, notesAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 
 export function CaseDetailPage() {
@@ -10,8 +10,37 @@ export function CaseDetailPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [showQR, setShowQR] = useState(false);
+  const [caseData, setCaseData] = useState(null);
+  const [caseEvidence, setCaseEvidence] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const caseData = cases.find(c => c.id === id || c.caseNumber === id);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const caseRes = await casesAPI.get(id);
+        setCaseData(caseRes.data);
+        const [docsRes, notesRes] = await Promise.all([
+          documentsAPI.list({ case_id: id }),
+          notesAPI.list({ case_id: id })
+        ]);
+        setCaseEvidence(docsRes.data.documents || docsRes.data || []);
+        setNotes(notesRes.data.notes || notesRes.data || []);
+      } catch (err) {
+        console.error('Error fetching case:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-[#b4f461]/30 border-t-[#b4f461] rounded-full animate-spin" />
+    </div>
+  );
+
   if (!caseData) return (
     <div className="flex flex-col items-center justify-center py-20">
       <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
@@ -21,8 +50,6 @@ export function CaseDetailPage() {
     </div>
   );
 
-  const caseEvidence = evidences.filter(e => e.caseId === caseData.id);
-  const notes = caseNotes.filter(n => n.caseId === caseData.id);
   const tabs = ['overview', 'hearings', 'documents', 'timeline', 'notes'];
 
   return (

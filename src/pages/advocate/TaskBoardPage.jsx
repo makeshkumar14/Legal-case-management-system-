@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Calendar, Clock, GripVertical, X, CheckSquare, AlertTriangle, Timer } from 'lucide-react';
-import { cases } from '../../data/mockData';
+import { casesAPI, tasksAPI } from '../../services/api';
 
 const initialTasks = {
   todo: [
@@ -32,7 +32,36 @@ export function TaskBoardPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [dragItem, setDragItem] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
-  const [newTask, setNewTask] = useState({ title: '', priority: 'medium', case: cases[0]?.caseNumber || '', due: '' });
+  const [cases, setCases] = useState([]);
+  const [newTask, setNewTask] = useState({ title: '', priority: 'medium', case: '', due: '' });
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const res = await casesAPI.list();
+        const casesData = res.data.cases || res.data || [];
+        setCases(casesData);
+        if (casesData.length > 0) {
+          setNewTask(prev => ({ ...prev, case: casesData[0].case_number || casesData[0].caseNumber || '' }));
+        }
+        // Also try to load tasks from API
+        try {
+          const tasksRes = await tasksAPI.list();
+          const apiTasks = tasksRes.data.tasks || tasksRes.data || [];
+          if (apiTasks.length > 0) {
+            setTasks({
+              todo: apiTasks.filter(t => t.status === 'pending' || t.status === 'todo'),
+              inProgress: apiTasks.filter(t => t.status === 'in_progress'),
+              done: apiTasks.filter(t => t.status === 'completed' || t.status === 'done'),
+            });
+          }
+        } catch { /* use initial tasks */ }
+      } catch (err) {
+        console.error('Error fetching cases:', err);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const handleDragStart = (taskId, fromCol) => setDragItem({ taskId, fromCol });
   const handleDrop = (toCol) => {

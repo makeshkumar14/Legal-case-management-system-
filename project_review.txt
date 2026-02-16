@@ -1,0 +1,436 @@
+﻿# Legal Case Management System â€” Complete Project Review
+
+## 1. Project Overview
+
+**Project Name:** Legal Case Management System  
+**Architecture:** Full-Stack Web Application  
+**Frontend:** React 19 + Vite 7 (JSX, TailwindCSS 4)  
+**Backend:** Python Flask 3.1 REST API  
+**Database:** MySQL (via PyMySQL + SQLAlchemy ORM)  
+**Authentication:** JWT (JSON Web Tokens)  
+**Version Control:** Git (GitHub â€” `makeshkumar14/Legal-case-management-system-`)
+
+### Purpose
+
+A role-based legal case management system enabling **Public Users**, **Advocates**, and **Court Officials** to manage cases, hearings, documents, tasks, messaging, and analytics through a unified web platform.
+
+---
+
+## 2. Technology Stack
+
+### Frontend
+
+| Technology               | Version | Purpose                            |
+| ------------------------ | ------- | ---------------------------------- |
+| React                    | 19.2.0  | UI framework                       |
+| Vite                     | 7.2.4   | Build tool & dev server            |
+| TailwindCSS              | 4.1.18  | Utility-first CSS                  |
+| React Router DOM         | 7.13.0  | Client-side routing                |
+| Axios                    | 1.13.5  | HTTP client for API calls          |
+| Framer Motion            | 12.29.3 | Animations                         |
+| Lucide React             | 0.563.0 | Icon library                       |
+| Recharts                 | 3.7.0   | Charts & data visualization        |
+| FullCalendar             | 6.1.20  | Calendar component (day/time grid) |
+| QRCode.react             | 4.2.0   | QR code generation                 |
+| @yudiel/react-qr-scanner | 2.5.1   | QR code scanning                   |
+| clsx                     | 2.1.1   | Conditional CSS classes            |
+
+### Backend
+
+| Technology         | Version | Purpose                         |
+| ------------------ | ------- | ------------------------------- |
+| Flask              | 3.1.0   | Web framework                   |
+| Flask-SQLAlchemy   | 3.1.1   | ORM (Object Relational Mapping) |
+| Flask-JWT-Extended | 4.7.1   | JWT authentication              |
+| Flask-CORS         | 5.0.1   | Cross-Origin Resource Sharing   |
+| Flask-Mail         | 0.10.0  | Email notifications             |
+| Flask-Bcrypt       | 1.0.1   | Password hashing                |
+| PyMySQL            | 1.1.1   | MySQL driver                    |
+| python-dotenv      | 1.1.0   | Environment variable management |
+| cryptography       | 44.0.0  | Cryptographic operations        |
+| Werkzeug           | 3.1.3   | WSGI utility library            |
+
+---
+
+## 3. Project Structure
+
+```
+Legal case management system/
+â”œâ”€â”€ backend/                    # Python Flask API
+â”‚   â”œâ”€â”€ .env                    # Environment variables (DB, JWT, Mail, CORS)
+â”‚   â”œâ”€â”€ app.py                  # Flask app factory with blueprint registration
+â”‚   â”œâ”€â”€ config.py               # Configuration class (DB, JWT, Mail, Upload, CORS)
+â”‚   â”œâ”€â”€ schema.sql              # MySQL database schema (9 tables)
+â”‚   â”œâ”€â”€ seed.py                 # Database seeder with sample data
+â”‚   â”œâ”€â”€ requirements.txt        # Python dependencies (10 packages)
+â”‚   â”œâ”€â”€ models/                 # SQLAlchemy ORM Models
+â”‚   â”‚   â”œâ”€â”€ __init__.py         # SQLAlchemy db instance
+â”‚   â”‚   â”œâ”€â”€ user.py             # User model (public/advocate/court roles)
+â”‚   â”‚   â”œâ”€â”€ case.py             # Case, Hearing, CaseTimeline models
+â”‚   â”‚   â”œâ”€â”€ document.py         # Document/Evidence model
+â”‚   â”‚   â”œâ”€â”€ task.py             # Task model
+â”‚   â”‚   â”œâ”€â”€ case_note.py        # Case notes model
+â”‚   â”‚   â”œâ”€â”€ notification.py     # Notification model
+â”‚   â”‚   â”œâ”€â”€ message.py          # Messaging model
+â”‚   â”‚   â””â”€â”€ courtroom.py        # Courtroom model
+â”‚   â”œâ”€â”€ routes/                 # API Route Blueprints
+â”‚   â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”‚   â”œâ”€â”€ auth.py             # Authentication (register, login, profile, password)
+â”‚   â”‚   â”œâ”€â”€ cases.py            # Case CRUD + search + QR lookup
+â”‚   â”‚   â”œâ”€â”€ hearings.py         # Hearing CRUD + calendar view
+â”‚   â”‚   â”œâ”€â”€ documents.py        # Document upload + verify + delete
+â”‚   â”‚   â”œâ”€â”€ tasks.py            # Task CRUD
+â”‚   â”‚   â”œâ”€â”€ notes.py            # Case notes CRUD
+â”‚   â”‚   â”œâ”€â”€ notifications.py    # Notifications + email sending
+â”‚   â”‚   â”œâ”€â”€ messages.py         # Messaging (contacts, conversation, send)
+â”‚   â”‚   â”œâ”€â”€ courtrooms.py       # Courtroom listing + update
+â”‚   â”‚   â””â”€â”€ analytics.py        # Dashboard stats, trends, charts, performance
+â”‚   â””â”€â”€ uploads/                # Uploaded document files directory
+â”‚
+â”œâ”€â”€ src/                        # React Frontend
+â”‚   â”œâ”€â”€ main.jsx                # React entry point
+â”‚   â”œâ”€â”€ App.jsx                 # Root component (routing, providers, protected routes)
+â”‚   â”œâ”€â”€ App.css                 # Global app styles
+â”‚   â”œâ”€â”€ index.css               # Base CSS + TailwindCSS config + motion bg
+â”‚   â”œâ”€â”€ context/                # React Context Providers
+â”‚   â”‚   â”œâ”€â”€ AuthContext.jsx     # Authentication state (user, token, login, logout)
+â”‚   â”‚   â””â”€â”€ ThemeContext.jsx    # Theme state (light mode only, currently)
+â”‚   â”œâ”€â”€ services/               # API Service Layer
+â”‚   â”‚   â””â”€â”€ api.js              # Axios instance + 10 API modules (auth, cases, hearings, docs, tasks, notes, notifications, messages, courtrooms, analytics)
+â”‚   â”œâ”€â”€ layouts/
+â”‚   â”‚   â””â”€â”€ DashboardLayout.jsx # Main layout with Sidebar + Navbar + content area
+â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”œâ”€â”€ layout/
+â”‚   â”‚   â”‚   â”œâ”€â”€ Navbar.jsx      # Top navigation bar (search, notifications, profile)
+â”‚   â”‚   â”‚   â””â”€â”€ Sidebar.jsx     # Side navigation (role-specific menu items + colors)
+â”‚   â”‚   â””â”€â”€ shared/
+â”‚   â”‚       â”œâ”€â”€ AnimatedCard.jsx     # Framer Motion animated card wrapper
+â”‚   â”‚       â”œâ”€â”€ ChatBot.jsx          # AI chatbot component
+â”‚   â”‚       â”œâ”€â”€ CountdownTimer.jsx   # Countdown timer for hearings
+â”‚   â”‚       â”œâ”€â”€ LoadingSkeleton.jsx   # Loading skeleton placeholders
+â”‚   â”‚       â”œâ”€â”€ Modal.jsx            # Reusable modal dialog
+â”‚   â”‚       â”œâ”€â”€ QRCodeScanner.jsx    # QR code scanner for case lookup
+â”‚   â”‚       â”œâ”€â”€ QRCodeViewer.jsx     # QR code display component
+â”‚   â”‚       â”œâ”€â”€ StatusBadge.jsx      # Color-coded status badges
+â”‚   â”‚       â”œâ”€â”€ Timeline.jsx         # Case timeline component
+â”‚   â”‚       â””â”€â”€ Toast.jsx            # Toast notification system (context-based)
+â”‚   â”œâ”€â”€ pages/
+â”‚   â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â”‚   â””â”€â”€ LoginPage.jsx        # Login + Registration page
+â”‚   â”‚   â”œâ”€â”€ public/                  # For Public (Citizen) Users
+â”‚   â”‚   â”‚   â”œâ”€â”€ PublicDashboard.jsx  # Case listing + stats for citizens
+â”‚   â”‚   â”‚   â””â”€â”€ AdvancedSearchPage.jsx # Multi-criteria case search
+â”‚   â”‚   â”œâ”€â”€ advocate/                # For Advocates (Lawyers)
+â”‚   â”‚   â”‚   â”œâ”€â”€ AdvocateDashboard.jsx    # Case overview, stats, calendar
+â”‚   â”‚   â”‚   â”œâ”€â”€ DocumentManagement.jsx   # Evidence/document upload & management
+â”‚   â”‚   â”‚   â”œâ”€â”€ CaseNotesPage.jsx        # Case notes with editor
+â”‚   â”‚   â”‚   â”œâ”€â”€ TaskBoardPage.jsx        # Task board (kanban-style)
+â”‚   â”‚   â”‚   â””â”€â”€ AdvocatePerformance.jsx  # Performance metrics & win rate
+â”‚   â”‚   â”œâ”€â”€ court/                   # For Court Officials
+â”‚   â”‚   â”‚   â”œâ”€â”€ CourtDashboard.jsx       # Full court overview, stats, charts
+â”‚   â”‚   â”‚   â”œâ”€â”€ HearingScheduler.jsx     # Schedule & manage hearings (calendar)
+â”‚   â”‚   â”‚   â”œâ”€â”€ ReportsPage.jsx          # Analytics charts & reports
+â”‚   â”‚   â”‚   â””â”€â”€ CourtRoomBoard.jsx       # Real-time courtroom status board
+â”‚   â”‚   â””â”€â”€ shared/                  # Shared across all roles
+â”‚   â”‚       â”œâ”€â”€ CaseDetailPage.jsx       # Full case view (timeline, hearings, docs)
+â”‚   â”‚       â”œâ”€â”€ ProfilePage.jsx          # User profile management
+â”‚   â”‚       â”œâ”€â”€ NotificationCenter.jsx   # Notifications list + mark read
+â”‚   â”‚       â””â”€â”€ MessagingPage.jsx        # In-app messaging system
+â”‚   â”œâ”€â”€ data/                        # Static/mock data (1 file)
+â”‚   â””â”€â”€ assets/                      # Static assets (1 file)
+â”‚
+â”œâ”€â”€ public/                     # Static public assets
+â”œâ”€â”€ index.html                  # HTML entry point
+â”œâ”€â”€ package.json                # Node.js dependencies & scripts
+â”œâ”€â”€ vite.config.js              # Vite configuration
+â”œâ”€â”€ eslint.config.js            # ESLint configuration
+â””â”€â”€ dist/                       # Production build output
+```
+
+---
+
+## 4. Database Schema (MySQL â€” 9 Tables)
+
+### Entity-Relationship Summary
+
+| Table             | Columns                                                                                                                                                                                                                                                                                                                                   | Key Relationships                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **users**         | id, name, email, password_hash, role (public/advocate/court), phone, avatar, citizen_id, bar_council_id, specialization, experience, rating, active_cases, court_name, created_at                                                                                                                                                         | Parent to: cases, documents, tasks, notes, notifications, messages |
+| **courtrooms**    | id, name, judge, status, current_case, case_title, start_time, case_type                                                                                                                                                                                                                                                                  | Referenced by: cases                                               |
+| **cases**         | id, case_number, title, description, case_type (Civil/Criminal/Family/Consumer/Writ), status (filed/under_review/hearing_scheduled/in_progress/judgment_reserved/closed/dismissed), priority, petitioner, respondent, advocate_id (FKâ†’users), judge, courtroom_id (FKâ†’courtrooms), court_room_name, next_hearing, filing_date, created_at | Parent to: hearings, timeline, documents, tasks, notes             |
+| **hearings**      | id, case_id (FKâ†’cases), date, type, status (scheduled/completed), notes, location, start_time, end_time                                                                                                                                                                                                                                   | Belongs to: cases                                                  |
+| **case_timeline** | id, case_id (FKâ†’cases), date, event, description, created_at                                                                                                                                                                                                                                                                              | Belongs to: cases                                                  |
+| **documents**     | id, case_id (FKâ†’cases), uploaded_by (FKâ†’users), title, doc_type, file_type, file_path, file_size, verified, uploaded_at                                                                                                                                                                                                                   | Belongs to: cases, users                                           |
+| **tasks**         | id, case_id (FKâ†’cases), user_id (FKâ†’users), title, completed, priority, due_date, created_at                                                                                                                                                                                                                                              | Belongs to: cases, users                                           |
+| **case_notes**    | id, case_id (FKâ†’cases), user_id (FKâ†’users), content, created_at, updated_at                                                                                                                                                                                                                                                               | Belongs to: cases, users                                           |
+| **notifications** | id, user_id (FKâ†’users), type (system), title, message, priority, is_read, created_at                                                                                                                                                                                                                                                      | Belongs to: users                                                  |
+| **messages**      | id, sender_id (FKâ†’users), receiver_id (FKâ†’users), content, is_read, sent_at                                                                                                                                                                                                                                                               | Belongs to: users (sender & receiver)                              |
+
+---
+
+## 5. Backend API Endpoints (REST)
+
+### Authentication (`/api/auth`)
+
+| Method | Endpoint                    | Description                                        | Auth |
+| ------ | --------------------------- | -------------------------------------------------- | ---- |
+| POST   | `/api/auth/register`        | Register new user (public/advocate/court)          | No   |
+| POST   | `/api/auth/login`           | Login & receive JWT token                          | No   |
+| GET    | `/api/auth/profile`         | Get current user profile                           | JWT  |
+| PUT    | `/api/auth/profile`         | Update profile (name, phone, role-specific fields) | JWT  |
+| PUT    | `/api/auth/change-password` | Change password                                    | JWT  |
+
+### Cases (`/api/cases`)
+
+| Method | Endpoint                      | Description                                                                           | Auth |
+| ------ | ----------------------------- | ------------------------------------------------------------------------------------- | ---- |
+| GET    | `/api/cases`                  | List cases (role-based filtering: advocate sees own, public sees own, court sees all) | JWT  |
+| GET    | `/api/cases/<id>`             | Get case detail with hearings & timeline                                              | JWT  |
+| POST   | `/api/cases`                  | Create case (court/advocate only)                                                     | JWT  |
+| PUT    | `/api/cases/<id>`             | Update case details                                                                   | JWT  |
+| DELETE | `/api/cases/<id>`             | Delete case (court only)                                                              | JWT  |
+| GET    | `/api/cases/search?q=`        | Search cases by number, title, petitioner, respondent, type                           | JWT  |
+| GET    | `/api/cases/qr/<case_number>` | QR code case lookup                                                                   | JWT  |
+
+### Hearings (`/api/hearings`)
+
+| Method | Endpoint                 | Description                           | Auth |
+| ------ | ------------------------ | ------------------------------------- | ---- |
+| GET    | `/api/hearings`          | List hearings (with filters)          | JWT  |
+| POST   | `/api/hearings`          | Schedule a new hearing                | JWT  |
+| PUT    | `/api/hearings/<id>`     | Update hearing details                | JWT  |
+| DELETE | `/api/hearings/<id>`     | Delete hearing                        | JWT  |
+| GET    | `/api/hearings/calendar` | Get hearings in calendar event format | JWT  |
+
+### Documents (`/api/documents`)
+
+| Method | Endpoint                     | Description                                     | Auth |
+| ------ | ---------------------------- | ----------------------------------------------- | ---- |
+| GET    | `/api/documents`             | List documents (filterable)                     | JWT  |
+| POST   | `/api/documents`             | Upload document (multipart/form-data, max 50MB) | JWT  |
+| PUT    | `/api/documents/<id>/verify` | Mark document as verified                       | JWT  |
+| DELETE | `/api/documents/<id>`        | Delete document                                 | JWT  |
+
+### Tasks (`/api/tasks`)
+
+| Method | Endpoint          | Description                                  | Auth |
+| ------ | ----------------- | -------------------------------------------- | ---- |
+| GET    | `/api/tasks`      | List tasks                                   | JWT  |
+| POST   | `/api/tasks`      | Create task                                  | JWT  |
+| PUT    | `/api/tasks/<id>` | Update task (mark complete, change priority) | JWT  |
+| DELETE | `/api/tasks/<id>` | Delete task                                  | JWT  |
+
+### Notes (`/api/notes`)
+
+| Method | Endpoint          | Description      | Auth |
+| ------ | ----------------- | ---------------- | ---- |
+| GET    | `/api/notes`      | List case notes  | JWT  |
+| POST   | `/api/notes`      | Create case note | JWT  |
+| PUT    | `/api/notes/<id>` | Update note      | JWT  |
+| DELETE | `/api/notes/<id>` | Delete note      | JWT  |
+
+### Notifications (`/api/notifications`)
+
+| Method | Endpoint                        | Description               | Auth |
+| ------ | ------------------------------- | ------------------------- | ---- |
+| GET    | `/api/notifications`            | List user notifications   | JWT  |
+| PUT    | `/api/notifications/<id>/read`  | Mark notification as read | JWT  |
+| DELETE | `/api/notifications/<id>`       | Delete notification       | JWT  |
+| POST   | `/api/notifications/send-email` | Send email notification   | JWT  |
+
+### Messages (`/api/messages`)
+
+| Method | Endpoint                    | Description                   | Auth |
+| ------ | --------------------------- | ----------------------------- | ---- |
+| GET    | `/api/messages/contacts`    | List message contacts         | JWT  |
+| GET    | `/api/messages/<contactId>` | Get conversation with contact | JWT  |
+| POST   | `/api/messages`             | Send a message                | JWT  |
+
+### Courtrooms (`/api/courtrooms`)
+
+| Method | Endpoint               | Description             | Auth |
+| ------ | ---------------------- | ----------------------- | ---- |
+| GET    | `/api/courtrooms`      | List courtrooms         | JWT  |
+| PUT    | `/api/courtrooms/<id>` | Update courtroom status | JWT  |
+
+### Analytics (`/api/analytics`)
+
+| Method | Endpoint                              | Description                                 | Auth |
+| ------ | ------------------------------------- | ------------------------------------------- | ---- |
+| GET    | `/api/analytics/dashboard`            | Role-based dashboard statistics             | JWT  |
+| GET    | `/api/analytics/cases-trend`          | Monthly cases filed/closed trend (7 months) | JWT  |
+| GET    | `/api/analytics/cases-by-type`        | Case distribution by type (pie chart data)  | JWT  |
+| GET    | `/api/analytics/daily-hearings`       | Weekly hearing counts per day               | JWT  |
+| GET    | `/api/analytics/advocate-performance` | Advocate win rate & specialization stats    | JWT  |
+| GET    | `/api/analytics/pendency`             | 12-month case pendency report               | JWT  |
+
+### Health Check
+
+| Method | Endpoint      | Description      | Auth |
+| ------ | ------------- | ---------------- | ---- |
+| GET    | `/api/health` | API health check | No   |
+
+**Total: 37 API endpoints across 10 modules**
+
+---
+
+## 6. Frontend Architecture
+
+### Routing & Role-Based Access Control (RBAC)
+
+The app implements three distinct user portals with **protected routes**:
+
+| Role                  | Base Path   | Pages                                                                                                           |
+| --------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| **Public** (Citizen)  | `/public`   | Dashboard, Cases, Case Detail, Search, Notifications, Messages, Settings                                        |
+| **Advocate** (Lawyer) | `/advocate` | Dashboard, Cases, Case Detail, Evidence, Calendar, Notes, Tasks, Performance, Messages, Settings, Notifications |
+| **Court** (Official)  | `/court`    | Dashboard, Cases, Case Detail, Hearings, Advocates, Analytics, QR, Rooms, Messages, Settings, Notifications     |
+
+- Unauthenticated users are redirected to `/login`
+- Users accessing wrong role routes are redirected to their own portal
+- JWT tokens are stored in `localStorage` and attached to all API requests via Axios interceptor
+
+### State Management
+
+- **AuthContext**: Manages user authentication state (user object, JWT token, login/logout functions)
+- **ThemeContext**: Theme management (currently locked to light mode)
+- **ToastProvider**: Global toast notification system
+
+### Key UI Components (12 Shared Components)
+
+1. **Navbar** â€” Top bar with search, notification bell, user avatar, theme toggle
+2. **Sidebar** â€” Role-specific navigation with color themes (purple for public, green for advocate, blue for court)
+3. **ChatBot** â€” AI assistant chatbot interface
+4. **Modal** â€” Reusable dialog component
+5. **Toast** â€” Context-based toast notifications
+6. **AnimatedCard** â€” Framer Motion card wrapper
+7. **StatusBadge** â€” Color-coded case status indicators
+8. **Timeline** â€” Case timeline visualization
+9. **LoadingSkeleton** â€” Skeleton loading placeholders
+10. **CountdownTimer** â€” Countdown to next hearing
+11. **QRCodeScanner** â€” Scan QR codes for case lookup
+12. **QRCodeViewer** â€” Display QR codes for cases
+
+### Page Features Summary
+
+| Page                    | Key Features                                                              |
+| ----------------------- | ------------------------------------------------------------------------- |
+| **LoginPage**           | Multi-role login + registration form                                      |
+| **PublicDashboard**     | Case listing with filters, stats summary                                  |
+| **AdvancedSearchPage**  | Multi-criteria search (type, status, date range, keyword)                 |
+| **AdvocateDashboard**   | Active cases, today's hearings, pending tasks, evidence count, case cards |
+| **DocumentManagement**  | Upload documents, view/verify/delete evidence, file type filters          |
+| **CaseNotesPage**       | Rich text note editor, per-case notes listing                             |
+| **TaskBoardPage**       | Task board with priority and status filters, task CRUD                    |
+| **AdvocatePerformance** | Win rate, case distribution, performance by case type                     |
+| **CourtDashboard**      | Full statistics, case trends chart, hearing scheduling, case management   |
+| **HearingScheduler**    | Calendar view (FullCalendar), schedule/edit hearings                      |
+| **ReportsPage**         | Bar/pie/line charts for cases, hearings, performance analytics            |
+| **CourtRoomBoard**      | Real-time courtroom status (available/in-session), current case display   |
+| **CaseDetailPage**      | Full case info, timeline, hearings, documents, linked entities            |
+| **ProfilePage**         | Edit profile, change password, role-specific fields                       |
+| **NotificationCenter**  | List notifications, mark as read, delete                                  |
+| **MessagingPage**       | Contact list, real-time-style conversation, send messages                 |
+
+---
+
+## 7. Configuration & Environment
+
+### Backend (.env)
+
+```
+DATABASE_URL=mysql+pymysql://root:makesh14@localhost:3306/legal_case_db
+JWT_SECRET_KEY=legal-cms-secret-key-2025
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=          # Not configured yet
+MAIL_PASSWORD=          # Not configured yet
+MAIL_DEFAULT_SENDER=noreply@legalcms.in
+CORS_ORIGINS=http://localhost:5173
+```
+
+### How to Run
+
+**Frontend** (port 5173):
+
+```bash
+npm install
+npm run dev
+```
+
+**Backend** (port 5000):
+
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
+
+**Database Setup**:
+
+```bash
+mysql -u root -p < schema.sql
+python seed.py              # Optional: populate sample data
+```
+
+---
+
+## 8. Key Features Summary
+
+1. **Role-Based Access Control (RBAC)** â€” Three distinct user roles (Public, Advocate, Court) with different permissions and UI
+2. **Case Management** â€” Full CRUD for legal cases with status tracking, priority, petitioner/respondent info
+3. **Hearing Scheduler** â€” Calendar-based hearing management with FullCalendar integration
+4. **Document/Evidence Management** â€” File upload (up to 50MB), verification system, document types
+5. **Task Management** â€” Task board for advocates with priority and due date tracking
+6. **Case Notes** â€” Rich text notes linked to specific cases
+7. **In-App Messaging** â€” User-to-user messaging system with contact list and conversation view
+8. **Notification System** â€” In-app notifications with email capability (Flask-Mail)
+9. **Analytics & Reports** â€” Dashboard statistics, case trends, type distribution, hearing frequency, advocate performance, pendency reports
+10. **QR Code System** â€” Generate QR for cases and scan for quick case lookup
+11. **AI Chatbot** â€” Built-in chatbot assistant
+12. **Case Timeline** â€” Chronological event tracking for each case
+13. **Advanced Search** â€” Multi-criteria search across cases
+14. **Courtroom Board** â€” Real-time courtroom availability and current case tracking
+15. **Advocate Performance** â€” Win rate calculation, specialization stats, case distribution
+16. **Responsive Design** â€” Modern cream & lime green theme with animated gradient background
+
+---
+
+## 9. Security Features
+
+- **Password Hashing** â€” Bcrypt hashing for all passwords
+- **JWT Authentication** â€” 24-hour token expiry, automatic 401 handling on frontend
+- **CORS Restriction** â€” Backend restricted to frontend origin (`localhost:5173`)
+- **Role-Based Authorization** â€” Backend enforces role checks (e.g., only court can delete cases, only court/advocate can create cases)
+- **File Upload Limits** â€” 50MB max file size for document uploads
+
+---
+
+## 10. File Size Summary
+
+| Category           | Count                | Total Lines (approx.)     |
+| ------------------ | -------------------- | ------------------------- |
+| Frontend Pages     | 16 files             | ~5,000+ lines             |
+| Shared Components  | 12 files             | ~1,500+ lines             |
+| API Service Layer  | 1 file               | 124 lines                 |
+| Context Providers  | 2 files              | 78 lines                  |
+| Backend Models     | 8 files              | ~350+ lines               |
+| Backend Routes     | 10 files             | ~1,200+ lines             |
+| Backend Config/App | 3 files              | ~127 lines                |
+| SQL Schema         | 1 file               | 160 lines                 |
+| Seed Data          | 1 file               | ~700+ lines               |
+| **Total**          | **~54 source files** | **~9,200+ lines of code** |
+
+---
+
+## 11. Tools & Developer Scripts
+
+| Command                         | Purpose                            |
+| ------------------------------- | ---------------------------------- |
+| `npm run dev`                   | Start Vite dev server (frontend)   |
+| `npm run build`                 | Build production bundle            |
+| `npm run lint`                  | Run ESLint                         |
+| `npm run preview`               | Preview production build           |
+| `python app.py`                 | Start Flask API server             |
+| `python seed.py`                | Populate database with sample data |
+| `mysql -u root -p < schema.sql` | Initialize MySQL database schema   |

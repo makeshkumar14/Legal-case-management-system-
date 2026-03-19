@@ -1,14 +1,9 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, User, Briefcase, Building2, Eye, EyeOff, ArrowRight, Shield, Sparkles, KeyRound, Fingerprint, Hash } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-<<<<<<< HEAD
-import { authAPI } from '../../services/api';
-import { useToast } from '../../components/shared/Toast';
-=======
 import { citizenSendOtp, citizenVerifyOtp, advocateLogin, adminLogin } from '../../services/api';
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
 
 const roles = [
   { id: 'public', label: 'Citizen Portal', icon: User, desc: 'Login with Aadhaar + OTP' },
@@ -16,41 +11,14 @@ const roles = [
   { id: 'court', label: 'Court Administration', icon: Building2, desc: 'Admin ID + Password' },
 ];
 
-
 export function LoginPage() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-<<<<<<< HEAD
-=======
   const [success, setSuccess] = useState('');
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
   const { login } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
 
-<<<<<<< HEAD
-  const handleRoleSelect = (roleId) => {
-    setSelectedRole(roleId);
-    setError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    try {
-      const res = await authAPI.login(email, password);
-      const { user, token } = res.data;
-      login(user, token);
-      addToast({ type: 'success', title: 'Login Successful', message: `Welcome back, ${user.name}!` });
-      navigate(`/${user.role}`);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-=======
   // Citizen state
   const [aadhaar, setAadhaar] = useState('');
   const [otp, setOtp] = useState('');
@@ -85,7 +53,7 @@ export function LoginPage() {
     resetForm();
   };
 
-  // ── Citizen: Send OTP ──
+  // ΓöÇΓöÇ Citizen: Send OTP ΓöÇΓöÇ
   const handleSendOtp = async () => {
     setError('');
     setSuccess('');
@@ -103,10 +71,9 @@ export function LoginPage() {
       setError(err.message);
     }
     setIsLoading(false);
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
   };
 
-  // ── Citizen: Verify OTP ──
+  // ΓöÇΓöÇ Citizen: Verify OTP ΓöÇΓöÇ
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
@@ -122,7 +89,7 @@ export function LoginPage() {
     setIsLoading(false);
   };
 
-  // ── Advocate: Login ──
+  // ΓöÇΓöÇ Advocate: Login ΓöÇΓöÇ
   const handleAdvocateLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -141,7 +108,7 @@ export function LoginPage() {
     setIsLoading(false);
   };
 
-  // ── Admin: Login ──
+  // ΓöÇΓöÇ Admin: Login ΓöÇΓöÇ
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -162,7 +129,7 @@ export function LoginPage() {
 
   const inputClass = "w-full pl-12 pr-4 py-4 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all";
 
-  // ── Citizen Login Form ──
+  // ΓöÇΓöÇ Citizen Login Form ΓöÇΓöÇ
   const renderCitizenForm = () => (
     <form onSubmit={handleVerifyOtp} className="space-y-5">
       <div>
@@ -190,7 +157,7 @@ export function LoginPage() {
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="p-4 bg-[#b4f461]/15 border-2 border-[#b4f461]/30 rounded-xl text-center"
             >
-              <p className="text-sm text-[#6b6b80] mb-1">🔐 Simulated OTP (for demo)</p>
+              <p className="text-sm text-[#6b6b80] mb-1">≡ƒöÉ Simulated OTP (for demo)</p>
               <p className="text-3xl font-mono font-bold text-[#1a1a2e] dark:text-white tracking-[0.3em]">{simulatedOtp}</p>
             </motion.div>
           )}
@@ -213,14 +180,14 @@ export function LoginPage() {
           <button type="button" onClick={() => { setOtpSent(false); setSimulatedOtp(''); setOtp(''); setError(''); setSuccess(''); }}
             className="w-full text-sm text-[#6b6b80] hover:text-[#b4f461] transition-colors"
           >
-            ← Change Aadhaar number
+            ΓåÉ Change Aadhaar number
           </button>
         </>
       )}
     </form>
   );
 
-  // ── Advocate Login Form ──
+  // ΓöÇΓöÇ Advocate Login Form ΓöÇΓöÇ
   const renderAdvocateForm = () => (
     <form onSubmit={handleAdvocateLogin} className="space-y-5">
       <div>
@@ -237,7 +204,7 @@ export function LoginPage() {
         <div className="relative group">
           <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
           <input type={showAdvPassword ? 'text' : 'password'} value={advocatePassword} onChange={(e) => setAdvocatePassword(e.target.value)}
-            placeholder="••••••••" className={`${inputClass} !pr-14`}
+            placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó" className={`${inputClass} !pr-14`}
           />
           <button type="button" onClick={() => setShowAdvPassword(!showAdvPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[#6b6b80] hover:text-[#b4f461] transition-colors">
             {showAdvPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -252,7 +219,7 @@ export function LoginPage() {
     </form>
   );
 
-  // ── Admin Login Form ──
+  // ΓöÇΓöÇ Admin Login Form ΓöÇΓöÇ
   const renderAdminForm = () => (
     <form onSubmit={handleAdminLogin} className="space-y-5">
       <div>
@@ -269,7 +236,7 @@ export function LoginPage() {
         <div className="relative group">
           <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
           <input type={showAdminPassword ? 'text' : 'password'} value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)}
-            placeholder="••••••••" className={`${inputClass} !pr-14`}
+            placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó" className={`${inputClass} !pr-14`}
           />
           <button type="button" onClick={() => setShowAdminPassword(!showAdminPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[#6b6b80] hover:text-[#b4f461] transition-colors">
             {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -316,12 +283,7 @@ export function LoginPage() {
                 key={role.id}
                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.1 }}
-<<<<<<< HEAD
-                whileHover={{ scale: 1.02, x: 6 }}
-                whileTap={{ scale: 0.98 }}
-=======
                 whileHover={{ scale: 1.02, x: 6 }} whileTap={{ scale: 0.98 }}
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
                 onClick={() => handleRoleSelect(role.id)}
                 className={`w-full p-5 rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                   selectedRole === role.id
@@ -370,36 +332,6 @@ export function LoginPage() {
                       </p>
                     </div>
                   </div>
-<<<<<<< HEAD
-                  
-                  {error && (
-                    <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
-                      {error}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Email Address</label>
-                      <div className="relative group">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required
-                          className="w-full pl-12 pr-4 py-4 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Password</label>
-                      <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
-                          className="w-full pl-12 pr-14 py-4 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all" />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[#6b6b80] hover:text-[#b4f461] transition-colors">
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                    </div>
-=======
 
                   {/* Error / Success messages */}
                   {error && (
@@ -412,28 +344,15 @@ export function LoginPage() {
                       className="mb-5 p-4 bg-green-500/10 border-2 border-green-500/20 rounded-xl text-green-600 dark:text-green-400 text-sm font-medium"
                     >{success}</motion.div>
                   )}
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
 
                   {renderForm()}
 
-<<<<<<< HEAD
-                    <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                      className="w-full py-4 px-6 bg-[#b4f461] hover:bg-[#9ae04d] text-[#1a1a2e] font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-[#b4f461]/25 disabled:opacity-50"
-                    >
-                      {isLoading ? <div className="w-5 h-5 border-2 border-[#1a1a2e]/30 border-t-[#1a1a2e] rounded-full animate-spin" /> : <><span>Sign In</span><ArrowRight className="w-5 h-5" /></>}
-                    </motion.button>
-                  </form>
-                  <p className="mt-6 text-center text-sm text-[#6b6b80]">
-                    Don't have an account? <Link to="/signup" className="text-[#b4f461] hover:underline font-bold">Sign up now</Link>
-                  </p>
-=======
                   {selectedRole !== 'court' && (
                     <p className="mt-6 text-center text-sm text-[#6b6b80]">
                       Don't have an account?{' '}
                       <Link to="/signup" className="text-[#b4f461] hover:text-[#9ae04d] font-medium transition-colors">Sign Up</Link>
                     </p>
                   )}
->>>>>>> 56d26ff8741e35187c37b68a968a792073ec53fc
                 </motion.div>
               ) : (
                 <motion.div key="prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -453,7 +372,7 @@ export function LoginPage() {
         </div>
 
         <motion.div className="mt-12 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-          <p className="text-[#6b6b80] text-sm">© 2024 Legal Case Management System • Government of India</p>
+          <p className="text-[#6b6b80] text-sm">┬⌐ 2024 Legal Case Management System ΓÇó Government of India</p>
         </motion.div>
       </motion.div>
     </div>

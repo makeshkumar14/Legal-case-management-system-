@@ -11,26 +11,44 @@ CREATE DATABASE IF NOT EXISTS legal_case_db
 
 USE legal_case_db;
 
--- ── Users ─────────────────────────────────────────────────────
+-- ── Users ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id              INT AUTO_INCREMENT PRIMARY KEY,
   name            VARCHAR(150) NOT NULL,
-  email           VARCHAR(150) NOT NULL UNIQUE,
-  password_hash   VARCHAR(255) NOT NULL,
+  email           VARCHAR(150) UNIQUE,
+  password_hash   VARCHAR(255),
   role            ENUM('public', 'advocate', 'court') NOT NULL,
   phone           VARCHAR(20),
   avatar          VARCHAR(255),
-  citizen_id      VARCHAR(50),
-  bar_council_id  VARCHAR(50),
+
+  -- Citizen-specific
+  aadhaar_number  VARCHAR(12) UNIQUE,
+
+  -- Advocate-specific
+  bar_council_id  VARCHAR(50) UNIQUE,
   specialization  VARCHAR(100),
   experience      VARCHAR(50),
   rating          FLOAT DEFAULT 0.0,
   active_cases    INT DEFAULT 0,
+
+  -- Court Admin-specific
+  admin_id        VARCHAR(50) UNIQUE,
   court_name      VARCHAR(200),
+
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ── Courtrooms ────────────────────────────────────────────────
+-- ── OTP Codes (for Citizen Aadhaar login) ────────────────────
+CREATE TABLE IF NOT EXISTS otp_codes (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  aadhaar     VARCHAR(12) NOT NULL,
+  otp_code    VARCHAR(6) NOT NULL,
+  expires_at  DATETIME NOT NULL,
+  used        BOOLEAN DEFAULT FALSE,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ── Courtrooms ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS courtrooms (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   name          VARCHAR(100) NOT NULL,
@@ -42,7 +60,7 @@ CREATE TABLE IF NOT EXISTS courtrooms (
   case_type     VARCHAR(50)
 ) ENGINE=InnoDB;
 
--- ── Cases ─────────────────────────────────────────────────────
+-- ── Cases ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS cases (
   id              INT AUTO_INCREMENT PRIMARY KEY,
   case_number     VARCHAR(50) NOT NULL UNIQUE,
@@ -64,7 +82,7 @@ CREATE TABLE IF NOT EXISTS cases (
   FOREIGN KEY (courtroom_id) REFERENCES courtrooms(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- ── Hearings ──────────────────────────────────────────────────
+-- ── Hearings ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS hearings (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   case_id     INT NOT NULL,
@@ -78,7 +96,7 @@ CREATE TABLE IF NOT EXISTS hearings (
   FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Case Timeline ─────────────────────────────────────────────
+-- ── Case Timeline ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS case_timeline (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   case_id     INT NOT NULL,
@@ -105,7 +123,7 @@ CREATE TABLE IF NOT EXISTS documents (
   FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Tasks ─────────────────────────────────────────────────────
+-- ── Tasks ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS tasks (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   case_id     INT NOT NULL,
@@ -119,7 +137,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Case Notes ────────────────────────────────────────────────
+-- ── Case Notes ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS case_notes (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   case_id     INT NOT NULL,
@@ -131,7 +149,7 @@ CREATE TABLE IF NOT EXISTS case_notes (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Notifications ─────────────────────────────────────────────
+-- ── Notifications ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notifications (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   user_id     INT NOT NULL,
@@ -144,7 +162,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Messages ──────────────────────────────────────────────────
+-- ── Messages ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS messages (
   id           INT AUTO_INCREMENT PRIMARY KEY,
   sender_id    INT NOT NULL,

@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('token');
+    return localStorage.getItem('token') || null;
   });
 
   const login = (userData, jwtToken) => {

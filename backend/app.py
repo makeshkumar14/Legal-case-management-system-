@@ -16,6 +16,7 @@ from models.case_note import CaseNote
 from models.notification import Notification
 from models.message import Message
 from models.courtroom import Courtroom
+from models.otp import OTPCode
 
 
 def create_app():

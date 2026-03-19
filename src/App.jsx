@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/shared/Toast';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { LoginPage } from './pages/auth/LoginPage';
+import { SignupPage } from './pages/auth/SignupPage';
 import { PublicDashboard } from './pages/public/PublicDashboard';
 import { AdvocateDashboard } from './pages/advocate/AdvocateDashboard';
 import { CourtDashboard } from './pages/court/CourtDashboard';
@@ -38,6 +39,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <LoginPage />} />
+      <Route path="/signup" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <SignupPage />} />
       
       <Route path="/public" element={<ProtectedRoute allowedRoles={['public']}><DashboardLayout /></ProtectedRoute>}>
         <Route index element={<PublicDashboard />} />

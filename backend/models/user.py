@@ -9,23 +9,24 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True)
     role = db.Column(db.Enum("public", "advocate", "court"), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     avatar = db.Column(db.String(255), nullable=True)
 
-    # Public-specific
-    citizen_id = db.Column(db.String(50), nullable=True)
+    # Public-specific (Citizen)
+    aadhaar_number = db.Column(db.String(12), unique=True, nullable=True)
 
     # Advocate-specific
-    bar_council_id = db.Column(db.String(50), nullable=True)
+    bar_council_id = db.Column(db.String(50), unique=True, nullable=True)
     specialization = db.Column(db.String(100), nullable=True)
     experience = db.Column(db.String(50), nullable=True)
     rating = db.Column(db.Float, default=0.0)
     active_cases = db.Column(db.Integer, default=0)
 
-    # Court-specific
+    # Court-specific (Admin)
+    admin_id = db.Column(db.String(50), unique=True, nullable=True)
     court_name = db.Column(db.String(200), nullable=True)
 
     created_at = db.Column(db.DateTime, server_default=db.func.now())
@@ -43,6 +44,8 @@ class User(db.Model):
         self.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
     def check_password(self, password):
+        if not self.password_hash:
+            return False
         return bcrypt.check_password_hash(self.password_hash, password)
 
     def to_dict(self):
@@ -56,7 +59,7 @@ class User(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
         if self.role == "public":
-            data["citizenId"] = self.citizen_id
+            data["aadhaarNumber"] = self.aadhaar_number
         elif self.role == "advocate":
             data["barCouncilId"] = self.bar_council_id
             data["specialization"] = self.specialization
@@ -64,5 +67,6 @@ class User(db.Model):
             data["rating"] = self.rating
             data["activeCases"] = self.active_cases
         elif self.role == "court":
+            data["adminId"] = self.admin_id
             data["courtName"] = self.court_name
         return data

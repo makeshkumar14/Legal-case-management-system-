@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, User, Briefcase, Building2, Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
+import { useToast } from '../../components/shared/Toast';
 
 const roles = [
   { id: 'public', label: 'Citizen Portal', icon: User, desc: 'Track cases & hearings' },
@@ -11,11 +12,6 @@ const roles = [
   { id: 'court', label: 'Court Administration', icon: Building2, desc: 'Full administrative access' },
 ];
 
-const defaultCredentials = {
-  public: { email: 'rajesh@example.com', password: 'password123' },
-  advocate: { email: 'priya@example.com', password: 'password123' },
-  court: { email: 'court@example.com', password: 'password123' },
-};
 
 export function LoginPage() {
   const [selectedRole, setSelectedRole] = useState(null);
@@ -25,15 +21,11 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
-    const creds = defaultCredentials[roleId];
-    if (creds) {
-      setEmail(creds.email);
-      setPassword(creds.password);
-    }
     setError('');
   };
 
@@ -45,6 +37,7 @@ export function LoginPage() {
       const res = await authAPI.login(email, password);
       const { user, token } = res.data;
       login(user, token);
+      addToast({ type: 'success', title: 'Login Successful', message: `Welcome back, ${user.name}!` });
       navigate(`/${user.role}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
@@ -149,7 +142,7 @@ export function LoginPage() {
                       <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Email Address</label>
                       <div className="relative group">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required
                           className="w-full pl-12 pr-4 py-4 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all" />
                       </div>
                     </div>
@@ -158,7 +151,7 @@ export function LoginPage() {
                       <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Password</label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
                           className="w-full pl-12 pr-14 py-4 bg-[#f7f6f3] dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[#6b6b80] hover:text-[#b4f461] transition-colors">
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -180,7 +173,9 @@ export function LoginPage() {
                       {isLoading ? <div className="w-5 h-5 border-2 border-[#1a1a2e]/30 border-t-[#1a1a2e] rounded-full animate-spin" /> : <><span>Sign In</span><ArrowRight className="w-5 h-5" /></>}
                     </motion.button>
                   </form>
-                  <p className="mt-6 text-center text-sm text-[#6b6b80]">Credentials auto-filled • Connected to MySQL</p>
+                  <p className="mt-6 text-center text-sm text-[#6b6b80]">
+                    Don't have an account? <Link to="/signup" className="text-[#b4f461] hover:underline font-bold">Sign up now</Link>
+                  </p>
                 </motion.div>
               ) : (
                 <motion.div key="prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

@@ -38,21 +38,13 @@ def seed():
         # ═══════════════════════════════════════════════════════════
         print("Seeding users...")
         users = [
-            User(name="Rajesh Kumar", email="rajesh@example.com", role="public",
+            User(name="Rajesh Kumar (Public)", email="rajesh@example.com", role="public",
                  citizen_id="CIT-2024-7842", phone="9876543210"),
             User(name="Adv. Priya Sharma", email="priya@example.com", role="advocate",
                  bar_council_id="BCI/MAH/2019/4521", specialization="Civil & Family Law",
                  experience="8 years", rating=4.8, phone="9876543211"),
             User(name="Court Admin", email="court@example.com", role="court",
                  court_name="District Court, Mumbai", phone="9876543212"),
-            User(name="Adv. Vikram Singh", email="vikram@example.com", role="advocate",
-                 bar_council_id="BCI/DEL/2015/3210", specialization="Criminal Law",
-                 experience="12 years", rating=4.5, phone="9876543213"),
-            User(name="Meena Devi", email="meena@example.com", role="public",
-                 citizen_id="CIT-2024-1234", phone="9876543214"),
-            User(name="Adv. Anita Desai", email="anita@example.com", role="advocate",
-                 bar_council_id="BCI/KAR/2017/5678", specialization="Consumer Law",
-                 experience="6 years", rating=4.2, phone="9876543215"),
         ]
         for u in users:
             u.set_password("password123")
@@ -60,10 +52,7 @@ def seed():
         db.session.flush()
 
         advocate_priya = users[1]
-        advocate_vikram = users[3]
-        advocate_anita = users[5]
         public_rajesh = users[0]
-        public_meena = users[4]
         court_admin = users[2]
 
         # ═══════════════════════════════════════════════════════════
@@ -115,51 +104,23 @@ def seed():
                  description="Criminal case involving theft of valuable artifacts from the city museum.",
                  case_type="Criminal", status="in_progress", priority="high",
                  petitioner="State of Maharashtra", respondent="Rajan Kumar",
-                 advocate_id=advocate_vikram.id, judge="Justice P. Iyer",
+                 advocate_id=advocate_priya.id, judge="Justice P. Iyer",
                  court_room_name="Court Room 3",
                  next_hearing=datetime(2025, 2, 22, 11, 0), filing_date=date(2024, 6, 1)),
             Case(case_number="FAM-2024-0445", title="Gupta vs Gupta - Divorce Proceedings",
                  description="Mutual consent divorce with agreed terms on alimony and child custody.",
                  case_type="Family", status="under_review", priority="medium",
-                 petitioner="Meena Devi", respondent="Suresh Gupta",
+                 petitioner="Public Citizen", respondent="Suresh Gupta",
                  advocate_id=advocate_priya.id, judge="Justice A. Khan",
                  court_room_name="Court Room 4",
                  next_hearing=datetime(2025, 3, 5, 10, 30), filing_date=date(2024, 7, 20)),
-            Case(case_number="WRT-2024-0267", title="Environmental Writ - River Pollution",
-                 description="Public interest litigation on industrial pollution in Yamuna river basin.",
-                 case_type="Writ", status="filed", priority="high",
-                 petitioner="Environmental Trust of India", respondent="Industrial Board",
-                 advocate_id=advocate_anita.id, judge="Justice K. Pillai",
-                 court_room_name="Court Room 6",
-                 next_hearing=datetime(2025, 2, 28, 10, 15), filing_date=date(2024, 9, 10)),
             Case(case_number="CNS-2024-0891", title="Consumer Fraud - Patel vs Electronics Ltd",
                  description="Consumer complaint regarding defective electronic goods and refund denial.",
                  case_type="Consumer", status="hearing_scheduled", priority="medium",
                  petitioner="Rajesh Kumar", respondent="Super Electronics Ltd.",
-                 advocate_id=advocate_anita.id, judge="Justice D. Sharma",
+                 advocate_id=advocate_priya.id, judge="Justice D. Sharma",
                  court_room_name="Court Room 12",
                  next_hearing=datetime(2025, 3, 10, 10, 45), filing_date=date(2024, 10, 5)),
-            Case(case_number="CIV-2024-2341", title="Land Dispute - Village Boundary",
-                 description="Dispute over agricultural land boundaries between two villages.",
-                 case_type="Civil", status="judgment_reserved", priority="low",
-                 petitioner="Village Panchayat A", respondent="Village Panchayat B",
-                 advocate_id=advocate_vikram.id, judge="Justice T. Das",
-                 court_room_name="Mediation Room",
-                 filing_date=date(2024, 4, 25)),
-            Case(case_number="CRM-2024-1150", title="Cybercrime - Online Fraud Investigation",
-                 description="Investigation into a large-scale online financial fraud operation.",
-                 case_type="Criminal", status="in_progress", priority="high",
-                 petitioner="State Cyber Cell", respondent="Unknown Accused",
-                 advocate_id=advocate_vikram.id, judge="Justice S. Mehta",
-                 court_room_name="Court Room 2",
-                 next_hearing=datetime(2025, 3, 15, 11, 0), filing_date=date(2024, 11, 1)),
-            Case(case_number="FAM-2025-0078", title="Child Custody - Singh Family",
-                 description="Contested custody case following divorce proceedings.",
-                 case_type="Family", status="filed", priority="medium",
-                 petitioner="Anjali Singh", respondent="Ramesh Singh",
-                 advocate_id=advocate_priya.id, judge="Justice L. Bose",
-                 court_room_name="Family Court Hall",
-                 next_hearing=datetime(2025, 3, 20, 10, 0), filing_date=date(2025, 1, 15)),
         ]
         db.session.add_all(cases)
         db.session.flush()
@@ -193,15 +154,11 @@ def seed():
             Hearing(case_id=cases[2].id, date=date(2025, 3, 5), type="Final Review",
                     status="scheduled", location="Court Room 4",
                     start_time=datetime(2025, 3, 5, 10, 30), end_time=datetime(2025, 3, 5, 11, 30)),
-            # Case 4 hearings
-            Hearing(case_id=cases[3].id, date=date(2025, 2, 28), type="First Hearing",
-                    status="scheduled", location="Court Room 6",
-                    start_time=datetime(2025, 2, 28, 10, 15), end_time=datetime(2025, 2, 28, 11, 15)),
-            # Case 5 hearings
-            Hearing(case_id=cases[4].id, date=date(2024, 11, 15), type="First Hearing",
+            # Case 4 hearings (Now CNS-2024-0891)
+            Hearing(case_id=cases[3].id, date=date(2024, 11, 15), type="First Hearing",
                     status="completed", notes="Complaint noted. Respondent to file reply.",
                     location="Court Room 12"),
-            Hearing(case_id=cases[4].id, date=date(2025, 3, 10), type="Arguments",
+            Hearing(case_id=cases[3].id, date=date(2025, 3, 10), type="Arguments",
                     status="scheduled", location="Court Room 12",
                     start_time=datetime(2025, 3, 10, 10, 45), end_time=datetime(2025, 3, 10, 12, 0)),
         ]
@@ -245,16 +202,16 @@ def seed():
             Document(case_id=cases[0].id, uploaded_by=advocate_priya.id,
                      title="Tax Receipts 2020-2024", doc_type="Document",
                      file_type="pdf", file_size="1.8 MB", verified=False),
-            Document(case_id=cases[1].id, uploaded_by=advocate_vikram.id,
+            Document(case_id=cases[1].id, uploaded_by=advocate_priya.id,
                      title="CCTV Footage - Museum", doc_type="Video",
                      file_type="mp4", file_size="156 MB", verified=True),
-            Document(case_id=cases[1].id, uploaded_by=advocate_vikram.id,
+            Document(case_id=cases[1].id, uploaded_by=advocate_priya.id,
                      title="FIR Copy", doc_type="Document",
                      file_type="pdf", file_size="0.5 MB", verified=True),
-            Document(case_id=cases[4].id, uploaded_by=advocate_anita.id,
+            Document(case_id=cases[3].id, uploaded_by=advocate_priya.id,
                      title="Product Receipt", doc_type="Document",
                      file_type="pdf", file_size="0.3 MB", verified=True),
-            Document(case_id=cases[4].id, uploaded_by=advocate_anita.id,
+            Document(case_id=cases[3].id, uploaded_by=advocate_priya.id,
                      title="Defect Photos", doc_type="Image",
                      file_type="jpg", file_size="3.2 MB", verified=False),
         ]
@@ -274,13 +231,10 @@ def seed():
             Task(case_id=cases[2].id, user_id=advocate_priya.id,
                  title="Draft final settlement agreement", completed=False,
                  priority="high", due_date=date(2025, 3, 1)),
-            Task(case_id=cases[1].id, user_id=advocate_vikram.id,
+            Task(case_id=cases[1].id, user_id=advocate_priya.id,
                  title="Arrange expert witness testimony", completed=False,
                  priority="high", due_date=date(2025, 2, 21)),
-            Task(case_id=cases[1].id, user_id=advocate_vikram.id,
-                 title="File supplementary charge sheet", completed=True,
-                 priority="medium", due_date=date(2025, 2, 10)),
-            Task(case_id=cases[4].id, user_id=advocate_anita.id,
+            Task(case_id=cases[3].id, user_id=advocate_priya.id,
                  title="Collect product testing report", completed=False,
                  priority="medium", due_date=date(2025, 3, 8)),
         ]
@@ -295,7 +249,7 @@ def seed():
                      content="Client confirmed property purchase in 2018. Original deed available."),
             CaseNote(case_id=cases[0].id, user_id=advocate_priya.id,
                      content="Respondent's counsel requested adjournment — denied by judge."),
-            CaseNote(case_id=cases[1].id, user_id=advocate_vikram.id,
+            CaseNote(case_id=cases[1].id, user_id=advocate_priya.id,
                      content="CCTV footage clearly shows accused entering museum at 2:15 AM."),
         ]
         db.session.add_all(notes)
@@ -323,7 +277,7 @@ def seed():
             Notification(user_id=court_admin.id, type="system", title="New Case Filed",
                          message="Case FAM-2025-0078 has been filed and requires assignment.",
                          priority="medium"),
-            Notification(user_id=advocate_vikram.id, type="hearing", title="Hearing Tomorrow",
+            Notification(user_id=advocate_priya.id, type="hearing", title="Hearing Tomorrow",
                          message="Evidence presentation in CRM-2024-0923 at Court Room 3.",
                          priority="high"),
         ]
@@ -344,9 +298,9 @@ def seed():
                     content="Requesting early hearing date for case FAM-2024-0445."),
             Message(sender_id=court_admin.id, receiver_id=advocate_priya.id,
                     content="Noted. Will check availability and revert."),
-            Message(sender_id=advocate_vikram.id, receiver_id=court_admin.id,
+            Message(sender_id=advocate_priya.id, receiver_id=court_admin.id,
                     content="Need permission to present additional evidence in CRM-2024-0923."),
-            Message(sender_id=court_admin.id, receiver_id=advocate_vikram.id,
+            Message(sender_id=court_admin.id, receiver_id=advocate_priya.id,
                     content="Please file an application for the same. Will be taken up in next hearing."),
         ]
         db.session.add_all(messages)

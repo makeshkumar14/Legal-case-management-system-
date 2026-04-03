@@ -7,10 +7,7 @@ load_dotenv()
 
 class Config:
     # ── MySQL Database ──────────────────────────────────────────────
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "mysql+pymysql://root:root@localhost:3306/legal_case_db"
-    )
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:makesh14@127.0.0.1:3306/legal_case_db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ── JWT Authentication ──────────────────────────────────────────

@@ -34,6 +34,7 @@ class Case(db.Model):
     def to_dict(self, include_details=False):
         data = {
             "id": f"CASE-{self.filing_date.year}-{self.id:03d}" if self.filing_date else str(self.id),
+            "databaseId": self.id,
             "caseNumber": self.case_number,
             "title": self.title,
             "description": self.description,

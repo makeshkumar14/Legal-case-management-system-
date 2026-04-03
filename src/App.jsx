@@ -26,20 +26,26 @@ function MotionBackground() {
   );
 }
 
+const validRoles = ['public', 'advocate', 'court'];
+
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(user?.role)) return <Navigate to={`/${user?.role}`} replace />;
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    const rolePath = validRoles.includes(user?.role) ? `/${user?.role}` : '/login';
+    return <Navigate to={rolePath} replace />;
+  }
   return children;
 }
 
 function AppRoutes() {
   const { isAuthenticated, user } = useAuth();
+  const rolePath = validRoles.includes(user?.role) ? `/${user?.role}` : '/login';
   
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <LoginPage />} />
-      <Route path="/signup" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <SignupPage />} />
+      <Route path="/login" element={isAuthenticated && validRoles.includes(user?.role) ? <Navigate to={rolePath} replace /> : <LoginPage />} />
+      <Route path="/signup" element={isAuthenticated && validRoles.includes(user?.role) ? <Navigate to={rolePath} replace /> : <SignupPage />} />
       
       <Route path="/public" element={<ProtectedRoute allowedRoles={['public']}><DashboardLayout /></ProtectedRoute>}>
         <Route index element={<PublicDashboard />} />

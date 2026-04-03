@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine } from 'lucide-react';
+import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine, Download } from 'lucide-react';
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal, ConfirmModal } from '../../components/shared/Modal';
@@ -10,11 +10,28 @@ import { casesAPI, analyticsAPI } from '../../services/api';
 
 export function CourtDashboard() {
   const [showCaseModal, setShowCaseModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [searchId, setSearchId] = useState('');
   const [showScanner, setShowScanner] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    title: '',
+    caseType: 'Civil',
+    petitioner: '',
+    respondent: '',
+    priority: 'medium',
+    status: 'filed',
+    advocateId: '',
+    description: '',
+    judge: '',
+    courtRoom: '',
+    nextHearing: ''
+  });
 
   const [cases, setCases] = useState([]);
   const [analyticsData, setAnalyticsData] = useState({ totalCases: 0, pendingCases: 0, todayHearings: 0, casesTrend: [], casesByType: [], dailyHearings: [] });
@@ -30,19 +47,19 @@ export function CourtDashboard() {
           analyticsAPI.casesTrend(),
           analyticsAPI.casesByType(),
           analyticsAPI.dailyHearings(),
-          analyticsAPI.advocatePerformance()
+          analyticsAPI.allAdvocates()
         ]);
         setCases(casesRes.data.cases || casesRes.data || []);
         const dash = dashRes.data;
         setAnalyticsData({
-          totalCases: dash.total_cases || 0,
-          pendingCases: dash.pending_cases || 0,
-          todayHearings: dash.today_hearings || 0,
+          totalCases: dash.totalCases || 0,
+          pendingCases: dash.pendingCases || 0,
+          todayHearings: dash.todayHearings || 0,
           casesTrend: trendRes.data.trend || trendRes.data || [],
           casesByType: (typeRes.data.types || typeRes.data || []).map(t => ({ ...t, color: t.color || ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'][Math.floor(Math.random() * 5)] })),
           dailyHearings: hearingsRes.data.hearings || hearingsRes.data || [],
         });
-        setAdvocates(perfRes.data.advocates || perfRes.data || []);
+        setAdvocates(perfRes.data || []);
       } catch (err) {
         console.error('Error fetching court data:', err);
       } finally {
@@ -51,6 +68,37 @@ export function CourtDashboard() {
     };
     fetchData();
   }, []);
+
+  const handleExportCSV = () => {
+    const headers = ['Case Number', 'Title', 'Petitioner', 'Respondent', 'Type', 'Status', 'Priority', 'Judge', 'Court Room', 'Next Hearing'];
+    const rows = cases.map(c => [
+      c.caseNumber || c.case_number,
+      c.title,
+      c.petitioner,
+      c.respondent,
+      c.caseType,
+      c.status,
+      c.priority,
+      c.judge,
+      c.courtRoom || c.court_room_name,
+      c.nextHearing ? new Date(c.nextHearing).toLocaleDateString() : 'N/A'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.map(field => `"${String(field || '').replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cases_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const stats = [
     { label: 'Total Cases', value: analyticsData.totalCases, icon: FileText, color: 'bg-red-500', iconColor: 'text-white', trend: '+12%', up: true },
@@ -95,6 +143,11 @@ export function CourtDashboard() {
               <ScanLine className="w-5 h-5" />
             </motion.button>
           </div>
+
+          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleExportCSV}
+            className="flex items-center gap-2 px-5 py-3 bg-[#1a1a2e] dark:bg-[#232338] hover:bg-[#2d2d45] border-2 border-[#e5e4df] dark:border-[#2d2d45] text-[#1a1a2e] dark:text-white font-bold rounded-xl transition-all shadow-sm">
+            <Download className="w-5 h-5" />Export CSV
+          </motion.button>
 
           <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
             className="flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">
@@ -162,6 +215,8 @@ export function CourtDashboard() {
                   <tr className="border-b border-[#e5e4df] dark:border-[#2d2d45]">
                     <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Case No.</th>
                     <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Title</th>
+                    <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Petitioner</th>
+                    <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Advocate</th>
                     <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Status</th>
                     <th className="text-left py-4 px-4 text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Actions</th>
                   </tr>
@@ -172,12 +227,30 @@ export function CourtDashboard() {
                       className="border-b border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#f7f6f3] dark:hover:bg-[#1a1a2e] transition-colors group">
                       <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{c.case_number || c.caseNumber}</td>
                       <td className="py-4 px-4 text-sm text-[#1a1a2e] dark:text-white max-w-xs truncate">{c.title}</td>
+                      <td className="py-4 px-4 text-sm text-[#6b6b80] max-w-[150px] truncate" title={c.petitioner}>{c.petitioner || 'Unknown'}</td>
+                      <td className="py-4 px-4 text-sm text-[#6b6b80] max-w-[150px] truncate" title={c.advocate ? c.advocate.name : 'Unassigned'}>{c.advocate ? c.advocate.name : 'Unassigned'}</td>
                       <td className="py-4 px-4"><StatusBadge status={c.status} size="sm" /></td>
                       <td className="py-4 px-4">
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => { setSelectedCase(c); setShowQRModal(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><QrCode className="w-4 h-4" /></button>
-                          <button className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><Eye className="w-4 h-4" /></button>
-                          <button className="p-2 rounded-lg hover:bg-amber-500/20 text-[#6b6b80] hover:text-amber-400 transition-colors"><Edit className="w-4 h-4" /></button>
+                          <button onClick={() => { setSelectedCase(c); setShowViewModal(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => { 
+                            setSelectedCase(c); 
+                            setFormData({
+                              title: c.title,
+                              caseType: c.caseType || c.case_type || 'Civil',
+                              petitioner: c.petitioner,
+                              respondent: c.respondent,
+                              priority: c.priority || 'medium',
+                              status: c.status || 'filed',
+                              advocateId: c.advocate_id || (c.advocate ? c.advocate.id : ''),
+                              description: c.description || '',
+                              judge: c.judge || '',
+                              courtRoom: c.courtRoom || c.court_room_name || '',
+                              nextHearing: c.nextHearing ? c.nextHearing.split('T')[0] : ''
+                            });
+                            setShowEditModal(true); 
+                          }} className="p-2 rounded-lg hover:bg-amber-500/20 text-[#6b6b80] hover:text-amber-400 transition-colors"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => setShowDeleteConfirm(true)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -241,7 +314,7 @@ export function CourtDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-[#1a1a2e] dark:text-white font-medium truncate">{a.name}</p>
-                    <p className="text-xs text-[#6b6b80]">{a.active_cases || a.activeCases || 0} active cases</p>
+                    <p className="text-xs text-[#6b6b80]">{a.active_cases || 0} active cases</p>
                   </div>
                   <div className="text-right">
                     <span className="text-sm text-red-600 font-semibold">★ {a.rating || a.win_rate || '4.5'}</span>
@@ -253,31 +326,159 @@ export function CourtDashboard() {
         </div>
       </div>
 
-      {/* Modals */}
-      <Modal isOpen={showQRModal} onClose={() => setShowQRModal(false)} title="Case QR Code" size="sm">
-        {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.case_number || selectedCase.caseNumber} /></div>}
+      {/* View Case Details Modal */}
+      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Case Details" size="lg">
+        {selectedCase && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-6 bg-[#f7f6f3] dark:bg-[#1a1a2e] p-6 rounded-2xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+              <div>
+                <p className="text-xs text-[#6b6b80] uppercase tracking-wider mb-1">Case Number</p>
+                <p className="font-mono font-bold text-red-600 text-lg">{selectedCase.caseNumber || selectedCase.case_number}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b6b80] uppercase tracking-wider mb-1">Status</p>
+                <StatusBadge status={selectedCase.status} />
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-[#6b6b80] uppercase tracking-wider mb-1">Case Title</p>
+                <p className="font-semibold text-lg text-[#1a1a2e] dark:text-white">{selectedCase.title}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 bg-white dark:bg-[#232338] rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                  <p className="text-xs text-[#6b6b80] mb-1 font-medium">Petitioner (Client)</p>
+                  <p className="text-[#1a1a2e] dark:text-white font-semibold flex items-center gap-2">
+                    <Users className="w-4 h-4 text-red-500" /> {selectedCase.petitioner}
+                  </p>
+                </div>
+                <div className="p-4 bg-white dark:bg-[#232338] rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                  <p className="text-xs text-[#6b6b80] mb-1 font-medium">Respondent</p>
+                  <p className="text-[#1a1a2e] dark:text-white font-semibold">{selectedCase.respondent}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-white dark:bg-[#232338] rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                  <p className="text-xs text-[#6b6b80] mb-1 font-medium">Assigned Advocate</p>
+                  <p className="text-[#1a1a2e] dark:text-white font-semibold">
+                    {selectedCase.advocate ? selectedCase.advocate.name : 'Unassigned'}
+                  </p>
+                  {selectedCase.advocate && <p className="text-xs text-[#6b6b80] mt-1">{selectedCase.advocate.email}</p>}
+                </div>
+                <div className="p-4 bg-white dark:bg-[#232338] rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                  <p className="text-xs text-[#6b6b80] mb-1 font-medium">Priority</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${selectedCase.priority === 'high' ? 'bg-red-500' : selectedCase.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                    <span className="capitalize text-[#1a1a2e] dark:text-white font-semibold">{selectedCase.priority}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-4 bg-[#f7f6f3] dark:bg-[#1a1a2e]/50 rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                <p className="text-[10px] text-[#6b6b80] uppercase mb-1">Case Type</p>
+                <p className="text-sm font-semibold text-[#1a1a2e] dark:text-white">{selectedCase.caseType}</p>
+              </div>
+              <div className="p-4 bg-[#f7f6f3] dark:bg-[#1a1a2e]/50 rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                <p className="text-[10px] text-[#6b6b80] uppercase mb-1">Court Room</p>
+                <p className="text-sm font-semibold text-[#1a1a2e] dark:text-white">{selectedCase.courtRoom || 'N/A'}</p>
+              </div>
+              <div className="p-4 bg-[#f7f6f3] dark:bg-[#1a1a2e]/50 rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+                <p className="text-[10px] text-[#6b6b80] uppercase mb-1">Judge</p>
+                <p className="text-sm font-semibold text-[#1a1a2e] dark:text-white">{selectedCase.judge || 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white dark:bg-[#232338] rounded-xl border-2 border-[#e5e4df] dark:border-[#2d2d45]">
+              <p className="text-xs text-[#6b6b80] mb-2 font-medium">Description</p>
+              <p className="text-sm text-[#1a1a2e] dark:text-white leading-relaxed">{selectedCase.description || 'No description provided.'}</p>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button onClick={() => setShowViewModal(false)} className="px-6 py-3 bg-[#1a1a2e] text-white rounded-xl font-bold hover:bg-[#2d2d45] transition-all">Close Details</button>
+            </div>
+          </div>
+        )}
       </Modal>
 
-      <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => { }} title="Delete Case" message="Are you sure you want to delete this case? This action cannot be undone." confirmText="Delete" variant="danger" />
-
       <Modal isOpen={showCaseModal} onClose={() => setShowCaseModal(false)} title="Register New Case" size="lg">
-        <form className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Case Title</label>
-            <input type="text" className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Enter case title" />
-          </div>
+        <form className="space-y-5" onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await casesAPI.create(formData);
+            setShowCaseModal(false);
+            window.location.reload(); // Quick refresh to show new case
+          } catch (err) {
+            alert('Failed to create case: ' + err.message);
+          }
+        }}>
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Title</label>
+              <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Sharma vs State of Delhi" />
+            </div>
             <div>
-              <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Case Type</label>
-              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
-                <option className="bg-white dark:bg-[#1a1a2e]">Civil</option><option className="bg-white dark:bg-[#1a1a2e]">Criminal</option><option className="bg-white dark:bg-[#1a1a2e]">Family</option><option className="bg-white dark:bg-[#1a1a2e]">Consumer</option>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Petitioner (Client Name)</label>
+              <input type="text" required value={formData.petitioner} onChange={(e) => setFormData({...formData, petitioner: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Full name of petitioner" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Respondent</label>
+              <input type="text" required value={formData.respondent} onChange={(e) => setFormData({...formData, respondent: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Opposing party" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Type</label>
+              <select value={formData.caseType} onChange={(e) => setFormData({...formData, caseType: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="Civil">Civil</option>
+                <option value="Criminal">Criminal</option>
+                <option value="Family">Family</option>
+                <option value="Consumer">Consumer</option>
+                <option value="MACT">Motor Accident</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Assign Advocate</label>
-              <select className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
-                {advocates.map(a => <option key={a.id} className="bg-white dark:bg-[#1a1a2e]">{a.name}</option>)}
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Priority</label>
+              <select value={formData.priority} onChange={(e) => setFormData({...formData, priority: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Assign Advocate</label>
+              <select required value={formData.advocateId} onChange={(e) => setFormData({...formData, advocateId: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="">Select Advocate...</option>
+                {advocates.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Court Room</label>
+              <input type="text" value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Room 102" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Status</label>
+              <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="filed">Filed</option>
+                <option value="under_review">Under Review</option>
+                <option value="hearing_scheduled">Hearing Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="judgment_reserved">Judgment Reserved</option>
+                <option value="closed">Closed</option>
+                <option value="dismissed">Dismissed</option>
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Next Hearing Date</label>
+              <input type="date" value={formData.nextHearing} onChange={(e) => setFormData({...formData, nextHearing: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Judge Name</label>
+              <input type="text" value={formData.judge} onChange={(e) => setFormData({...formData, judge: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Justice Dixit" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Description</label>
+              <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Brief summary of the case..." />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
@@ -286,6 +487,116 @@ export function CourtDashboard() {
           </div>
         </form>
       </Modal>
+
+      {/* Edit Case Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Case Details" size="lg">
+        <form className="space-y-5" onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await casesAPI.update(selectedCase.databaseId || selectedCase.id, formData);
+            setShowEditModal(false);
+            window.location.reload();
+          } catch (err) {
+            alert('Failed to update case: ' + err.message);
+          }
+        }}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Title</label>
+              <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Sharma vs State of Delhi" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Petitioner (Client Name)</label>
+              <input type="text" required value={formData.petitioner} onChange={(e) => setFormData({...formData, petitioner: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Full name of petitioner" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Respondent</label>
+              <input type="text" required value={formData.respondent} onChange={(e) => setFormData({...formData, respondent: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Full name of respondent" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Type</label>
+              <select value={formData.caseType} onChange={(e) => setFormData({...formData, caseType: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="Civil">Civil</option>
+                <option value="Criminal">Criminal</option>
+                <option value="Family">Family</option>
+                <option value="Consumer">Consumer</option>
+                <option value="MACT">Motor Accident</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Priority</label>
+              <select value={formData.priority} onChange={(e) => setFormData({...formData, priority: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Assign Advocate</label>
+              <select required value={formData.advocateId} onChange={(e) => setFormData({...formData, advocateId: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="">Select Advocate...</option>
+                {advocates.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Court Room</label>
+              <input type="text" value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Room 102" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Status</label>
+              <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="filed">Filed</option>
+                <option value="under_review">Under Review</option>
+                <option value="hearing_scheduled">Hearing Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="judgment_reserved">Judgment Reserved</option>
+                <option value="closed">Closed</option>
+                <option value="dismissed">Dismissed</option>
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Next Hearing Date</label>
+              <input type="date" value={formData.nextHearing} onChange={(e) => setFormData({...formData, nextHearing: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Judge Name</label>
+              <input type="text" value={formData.judge} onChange={(e) => setFormData({...formData, judge: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Justice Dixit" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Description</label>
+              <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="Brief summary of the case..." />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={() => setShowEditModal(false)} className="px-5 py-2.5 rounded-xl bg-[#f7f6f3] dark:bg-[#232338] hover:bg-[#efeee9] dark:hover:bg-[#2d2d45] text-[#6b6b80] font-medium transition-colors border-2 border-[#e5e4df] dark:border-[#2d2d45]">Cancel</button>
+            <button type="submit" className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-lg shadow-amber-500/25 hover:shadow-orange-500/40 transition-all">Update Case</button>
+          </div>
+        </form>
+      </Modal>
+
+
+      {/* QR Code Modal */}
+      <Modal isOpen={showQRModal} onClose={() => setShowQRModal(false)} title="Case QR Code" size="sm">
+        {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.caseNumber || selectedCase.case_number} /></div>}
+      </Modal>
+
+      <ConfirmModal 
+        isOpen={showDeleteConfirm} 
+        onClose={() => setShowDeleteConfirm(false)} 
+        onConfirm={async () => {
+          try {
+            await casesAPI.remove(selectedCase.databaseId || selectedCase.id);
+            setShowDeleteConfirm(false);
+            window.location.reload();
+          } catch (err) {
+            alert('Failed to delete case: ' + err.message);
+          }
+        }} 
+        title="Delete Case" 
+        message="Are you sure you want to delete this case? This action cannot be undone." 
+        confirmText="Delete" 
+        variant="danger" 
+      />
 
       {/* QR Scanner */}
       <QRCodeScanner

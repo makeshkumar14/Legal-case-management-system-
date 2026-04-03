@@ -1,0 +1,18 @@
+﻿--- ADVOCATE CREDENTIALS ---
+Name: Adv. Priya Menon | Email: priya@example.com | Bar Council ID: BCI/MAH/2019/4521 | Phone: 9988776600
+Name: Adv. Rakesh Jhunjhunwala | Email: adv1@example.com | Bar Council ID: BCI/NAT/2011/001 | Phone: 9988776601
+Name: Adv. Sameer Wankhede | Email: adv2@example.com | Bar Council ID: BCI/NAT/2012/002 | Phone: 9988776602
+Name: Adv. Natasha Singh | Email: adv3@example.com | Bar Council ID: BCI/NAT/2013/003 | Phone: 9988776603
+Name: Adv. Imran Hashmi | Email: adv4@example.com | Bar Council ID: BCI/NAT/2014/004 | Phone: 9988776604
+Name: Adv. Pratiksha Patil | Email: adv5@example.com | Bar Council ID: BCI/NAT/2015/005 | Phone: 9988776605
+Name: Adv. Devendra Fadnavis | Email: adv6@example.com | Bar Council ID: BCI/NAT/2016/006 | Phone: 9988776606
+Name: Adv. Sunita Williams | Email: adv7@example.com | Bar Council ID: BCI/NAT/2017/007 | Phone: 9988776607
+Name: Adv. Rajeev Chandrasekhar | Email: adv8@example.com | Bar Council ID: BCI/NAT/2018/008 | Phone: 9988776608
+Name: Adv. Arundhati Roy | Email: adv9@example.com | Bar Council ID: BCI/NAT/2019/009 | Phone: 9988776609
+Name: Adv. Arjun Nair | Email: arjun@example.com | Bar Council ID: BCI/DEL/2020/1001 | Phone: 9988776601
+Name: Adv. Rakesh Sharma | Email: rakesh@example.com | Bar Council ID: BCI/KAR/2018/2002 | Phone: 9988776602
+Name: Adv. Neha Joshi | Email: neha@example.com | Bar Council ID: BCI/TN/2017/3003 | Phone: 9988776603
+Name: Adv. Imran Khan | Email: imran@example.com | Bar Council ID: BCI/GUJ/2021/4004 | Phone: 9988776604
+Name: Adv. Kavya Reddy | Email: kavya@example.com | Bar Council ID: BCI/AP/2016/5005 | Phone: 9988776605
+Name: Adv. Sunil Iyer | Email: sunil@example.com | Bar Council ID: BCI/KER/2015/6006 | Phone: 9988776606
+Name: Adv. Pavan Rao | Email: pavan@example.com | Bar Council ID: BCI/UP/2014/7007 | Phone: 9988776607

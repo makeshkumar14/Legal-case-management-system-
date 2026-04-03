@@ -104,7 +104,7 @@ export function SignupPage() {
         <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Full Name</label>
         <div className="relative group">
           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-          <input type="text" value={citizenName} onChange={(e) => setCitizenName(e.target.value)}
+          <input type="text" value={citizenName} onChange={(e) => setCitizenName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
             placeholder="Enter your full name" className={inputClass}
           />
         </div>
@@ -143,7 +143,7 @@ export function SignupPage() {
           <label className="block text-sm font-medium text-[#1a1a2e] dark:text-white mb-2">Full Name *</label>
           <div className="relative group">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80] group-focus-within:text-[#b4f461] transition-colors" />
-            <input type="text" value={advName} onChange={(e) => setAdvName(e.target.value)}
+            <input type="text" value={advName} onChange={(e) => setAdvName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
               placeholder="Adv. Full Name" className={inputClass}
             />
           </div>

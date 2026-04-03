@@ -32,7 +32,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     # Relationships
-    cases = db.relationship("Case", backref="advocate", lazy=True, foreign_keys="Case.advocate_id")
+    cases = db.relationship("Case", backref="advocate", lazy=True)
     documents = db.relationship("Document", backref="uploader", lazy=True)
     tasks = db.relationship("Task", backref="owner", lazy=True)
     notes = db.relationship("CaseNote", backref="author", lazy=True)

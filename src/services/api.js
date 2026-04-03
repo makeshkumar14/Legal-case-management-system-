@@ -11,6 +11,13 @@ async function request(endpoint, options = {}) {
   return data;
 }
 
+const withQuery = (endpoint, params = {}) => {
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  ).toString();
+  return query ? `${endpoint}?${query}` : endpoint;
+};
+
 // ═══════════════════════════════════════════════════
 //  CITIZEN (Aadhaar + OTP)
 // ═══════════════════════════════════════════════════
@@ -62,3 +69,47 @@ export const adminLogin = (adminId, password) =>
 export const getProfile = () => request('/auth/profile');
 export const updateProfile = (data) =>
   request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
+
+// ═══════════════════════════════════════════════════
+//  DATA APIs
+// ═══════════════════════════════════════════════════
+export const casesAPI = {
+  list: async (params = {}) => ({ data: await request(withQuery('/cases', params)) }),
+  get: async (id) => ({ data: await request(`/cases/${id}`) }),
+  create: async (payload) =>
+    ({ data: await request('/cases', { method: 'POST', body: JSON.stringify(payload) }) }),
+  update: async (id, payload) =>
+    ({ data: await request(`/cases/${id}`, { method: 'PUT', body: JSON.stringify(payload) }) }),
+  remove: async (id) =>
+    ({ data: await request(`/cases/${id}`, { method: 'DELETE' }) }),
+};
+
+export const tasksAPI = {
+  list: async (params = {}) => ({ data: await request(withQuery('/tasks', params)) }),
+};
+
+export const documentsAPI = {
+  list: async (params = {}) => ({ data: await request(withQuery('/documents', params)) }),
+};
+
+export const hearingsAPI = {
+  list: async (params = {}) => ({ data: await request(withQuery('/hearings', params)) }),
+  calendar: async () => ({ data: await request('/hearings/calendar') }),
+};
+
+export const notificationsAPI = {
+  list: async () => ({ data: await request('/notifications') }),
+};
+
+export const notesAPI = {
+  list: async (params = {}) => ({ data: await request(withQuery('/notes', params)) }),
+};
+
+export const analyticsAPI = {
+  dashboard: async () => ({ data: await request('/analytics/dashboard') }),
+  casesTrend: async () => ({ data: await request('/analytics/cases-trend') }),
+  casesByType: async () => ({ data: await request('/analytics/cases-by-type') }),
+  dailyHearings: async () => ({ data: await request('/analytics/daily-hearings') }),
+  advocatePerformance: async () => ({ data: await request('/analytics/advocate-performance') }),
+  allAdvocates: async () => ({ data: await request('/analytics/all-advocates') }),
+};

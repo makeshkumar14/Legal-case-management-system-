@@ -25,19 +25,22 @@ def citizen_register():
     if len(aadhaar) != 12 or not aadhaar.isdigit():
         return jsonify({"error": "Aadhaar number must be exactly 12 digits"}), 400
 
-    if User.query.filter_by(aadhaar_number=aadhaar).first():
-        return jsonify({"error": "This Aadhaar number is already registered"}), 409
+    try:
+        if User.query.filter_by(aadhaar_number=aadhaar).first():
+            return jsonify({"error": "This Aadhaar number is already registered"}), 409
 
-    user = User(
-        name=name,
-        aadhaar_number=aadhaar,
-        phone=phone,
-        role="public",
-    )
-    db.session.add(user)
-    db.session.commit()
+        user = User(
+            name=name,
+            aadhaar_number=aadhaar,
+            phone=phone,
+            role="public",
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    return jsonify({"message": "Citizen registered successfully. Please login with OTP."}), 201
+        return jsonify({"message": "Citizen registered successfully. Please login with OTP."}), 201
+    except Exception as e:
+        return jsonify({"error": f"DB_ERROR: {repr(e)}"}), 500
 
 
 @auth_bp.route("/citizen/send-otp", methods=["POST"])

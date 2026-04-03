@@ -3,7 +3,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db
 from models.case import Case, Hearing, CaseTimeline
 from models.user import User
-from datetime import date
+from models.notification import Notification
+from datetime import date, datetime
 
 cases_bp = Blueprint("cases", __name__, url_prefix="/api/cases")
 
@@ -68,6 +69,7 @@ def create_case():
         judge=data.get("judge"),
         court_room_name=data.get("courtRoom"),
         filing_date=date.today(),
+        next_hearing=datetime.fromisoformat(data["nextHearing"]) if data.get("nextHearing") else None
     )
     db.session.add(case)
     db.session.flush()
@@ -98,9 +100,71 @@ def update_case(case_id):
     case.description = data.get("description", case.description)
     case.status = data.get("status", case.status)
     case.priority = data.get("priority", case.priority)
+    case.case_type = data.get("caseType", case.case_type)
+    case.petitioner = data.get("petitioner", case.petitioner)
+    case.respondent = data.get("respondent", case.respondent)
     case.judge = data.get("judge", case.judge)
     case.court_room_name = data.get("courtRoom", case.court_room_name)
     case.advocate_id = data.get("advocateId", case.advocate_id)
+
+    # Handle Next Hearing Date
+    next_hearing_str = data.get("nextHearing")
+    if next_hearing_str:
+        try:
+            # Handle ISO format like "2023-10-27" or "2023-10-27T10:00:00"
+            if 'T' in next_hearing_str:
+                new_date = datetime.fromisoformat(next_hearing_str)
+            else:
+                new_date = datetime.strptime(next_hearing_str, "%Y-%m-%d")
+            
+            # Update case field
+            case.next_hearing = new_date
+            
+            # Create Hearing record
+            hearing = Hearing(
+                case_id=case.id,
+                date=new_date.date(),
+                type="Next Hearing Schedule",
+                status="scheduled",
+                location=case.court_room_name
+            )
+            db.session.add(hearing)
+
+            # Add Timeline entry
+            timeline = CaseTimeline(
+                case_id=case.id,
+                date=date.today(),
+                event="Hearing Scheduled",
+                description=f"Next hearing scheduled for {new_date.strftime('%d %b %Y')}"
+            )
+            db.session.add(timeline)
+
+            # Notifications
+            # 1. Notify Client (Petitioner)
+            client = User.query.filter_by(name=case.petitioner, role='public').first()
+            if client:
+                notif_client = Notification(
+                    user_id=client.id,
+                    type="hearing",
+                    title="Hearing Scheduled",
+                    message=f"A new hearing for your case '{case.title}' has been scheduled for {new_date.strftime('%d %b %Y')}.",
+                    priority="high"
+                )
+                db.session.add(notif_client)
+            
+            # 2. Notify Advocate
+            if case.advocate_id:
+                notif_adv = Notification(
+                    user_id=case.advocate_id,
+                    type="hearing",
+                    title="New Hearing Alert",
+                    message=f"Hearing scheduled: Case '{case.title}' on {new_date.strftime('%d %b %Y')}.",
+                    priority="high"
+                )
+                db.session.add(notif_adv)
+
+        except Exception as e:
+            print(f"Error parsing hearing date: {e}")
 
     db.session.commit()
     return jsonify({"message": "Case updated", "case": case.to_dict()}), 200

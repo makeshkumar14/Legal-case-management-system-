@@ -169,6 +169,33 @@ def advocate_performance():
     }), 200
 
 
+# ── GET /api/analytics/all-advocates ───────────────────────────────
+@analytics_bp.route("/all-advocates", methods=["GET"])
+@jwt_required()
+def all_advocates_stats():
+    """List all advocates with their performance summary for court admin."""
+    user = User.query.get(int(get_jwt_identity()))
+    if user.role != "court":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    advocates = User.query.filter_by(role="advocate").all()
+    data = []
+    for adv in advocates:
+        active_cases = Case.query.filter_by(advocate_id=adv.id).filter(
+            Case.status.in_(["filed", "under_review", "hearing_scheduled", "in_progress"])
+        ).count()
+        
+        data.append({
+            "id": adv.id,
+            "name": adv.name,
+            "email": adv.email,
+            "rating": adv.rating or 4.5,
+            "active_cases": active_cases
+        })
+
+    return jsonify(data), 200
+
+
 # ── GET /api/analytics/pendency ────────────────────────────────────
 @analytics_bp.route("/pendency", methods=["GET"])
 @jwt_required()

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal, Search, ScanLine } from 'lucide-react';
+import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal, Search, ScanLine, Bell } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { casesAPI, tasksAPI, documentsAPI, hearingsAPI } from '../../services/api';
+import { casesAPI, tasksAPI, documentsAPI, hearingsAPI, notificationsAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { useTheme } from '../../context/ThemeContext';
 import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
@@ -20,21 +20,24 @@ export function AdvocateDashboard() {
   const [tasks, setTasks] = useState([]);
   const [evidences, setEvidences] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [casesRes, tasksRes, docsRes, calRes] = await Promise.all([
+        const [casesRes, tasksRes, docsRes, calRes, notifRes] = await Promise.all([
           casesAPI.list(),
           tasksAPI.list(),
           documentsAPI.list(),
-          hearingsAPI.calendar()
+          hearingsAPI.calendar(),
+          notificationsAPI.list()
         ]);
         setCases(casesRes.data.cases || casesRes.data || []);
         setTasks(tasksRes.data.tasks || tasksRes.data || []);
         setEvidences(docsRes.data.documents || docsRes.data || []);
         setCalendarEvents(calRes.data.events || calRes.data || []);
+        setNotifications(notifRes.data.notifications || notifRes.data || []);
       } catch (err) {
         console.error('Error fetching advocate data:', err);
       } finally {
@@ -147,12 +150,12 @@ export function AdvocateDashboard() {
                     </div>
                     <h3 className="text-[#1a1a2e] dark:text-white font-medium mb-1 truncate group-hover:text-[#b4f461] transition-colors">{c.title}</h3>
                     <div className="flex items-center gap-4 text-xs text-[#6b6b80]">
-                      <span>{c.court}</span>
+                      <span>{c.courtRoom || c.court || 'Main Hall'}</span>
                       <span>•</span>
-                      <span>{c.hearings?.[0]?.date || c.next_hearing || 'No hearing'}</span>
+                      <span>{c.nextHearing ? new Date(c.nextHearing).toLocaleDateString('en-GB') : (c.hearings?.[0]?.date || 'No hearing')}</span>
                     </div>
                   </div>
-                  <button className="p-2 rounded-lg hover:bg-[#b4f461]/10 text-[#6b6b80] opacity-0 group-hover:opacity-100 transition-all">
+                  <button className="p-2 rounded-lg hover:bg-orange-500/10 text-[#6b6b80] opacity-0 group-hover:opacity-100 transition-all">
                     <MoreHorizontal className="w-5 h-5" />
                   </button>
                 </div>
@@ -163,6 +166,26 @@ export function AdvocateDashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Notifications Section */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="p-6 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-[#1a1a2e] dark:text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-orange-500" /> Recent Alerts
+              </h3>
+              <span className="text-xs text-[#6b6b80]">{notifications.filter(n => !n.read).length} new</span>
+            </div>
+            <div className="space-y-3">
+              {notifications.slice(0, 3).map((n, i) => (
+                <div key={n.id} className="p-3 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e] border-l-4 border-l-orange-500">
+                  <p className="text-sm font-medium text-[#1a1a2e] dark:text-white truncate">{n.title}</p>
+                  <p className="text-xs text-[#6b6b80] mt-1">{n.message?.slice(0, 50)}...</p>
+                </div>
+              ))}
+              {notifications.length === 0 && <p className="text-xs text-[#6b6b80] text-center py-2">No new alerts</p>}
+            </div>
+          </motion.div>
+
           {/* Tasks */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="p-6 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] shadow-sm">

@@ -38,11 +38,12 @@ export function PublicDashboard() {
     fetchData();
   }, []);
 
-  const nextHearing = userCases[0]?.hearings?.[0];
+  const firstCase = userCases[0];
+  const nextHearingDate = firstCase?.nextHearing || firstCase?.hearings?.[0]?.date;
 
   const stats = [
     { label: 'Active Cases', value: userCases.length.toString(), icon: FileText, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: `${userCases.filter(c => c.status === 'active').length} active` },
-    { label: 'Next Hearing', value: nextHearing ? '2d 14h' : 'None', icon: Calendar, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: nextHearing?.court || 'No upcoming' },
+    { label: 'Next Hearing', value: nextHearingDate ? new Date(nextHearingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'None', icon: Calendar, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: firstCase?.courtRoom || 'No upcoming' },
     { label: 'Documents', value: userCases.reduce((sum, c) => sum + (c.documents?.length || 0), 0).toString(), icon: Clock, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: 'Total files' },
     { label: 'Notifications', value: notifications.length.toString(), icon: Bell, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: `${notifications.filter(n => !n.read).length} unread` },
   ];
@@ -152,7 +153,7 @@ export function PublicDashboard() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Next Hearing Countdown */}
-          {nextHearing && (
+          {nextHearingDate && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
               className="p-6 rounded-2xl bg-[#b4f461]/10 border-2 border-[#b4f461]/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#b4f461]/20 to-transparent rounded-full blur-2xl" />
@@ -161,9 +162,9 @@ export function PublicDashboard() {
                   <Timer className="w-5 h-5" />
                   <span className="text-sm font-medium">Next Hearing</span>
                 </div>
-                <CountdownTimer targetDate={nextHearing.date} />
-                <p className="text-sm text-[#6b6b80] mt-4">{nextHearing.type}</p>
-                <p className="text-xs text-[#6b6b80]">{nextHearing.court}</p>
+                <CountdownTimer targetDate={nextHearingDate} />
+                <p className="text-sm text-[#6b6b80] mt-4">{firstCase?.caseType} Hearing</p>
+                <p className="text-xs text-[#6b6b80]">{firstCase?.courtRoom || 'Main Hall'}</p>
               </div>
             </motion.div>
           )}

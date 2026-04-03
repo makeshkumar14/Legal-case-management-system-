@@ -1,0 +1,72 @@
+# LEGAL CASE MANAGEMENT SYSTEM (LCMS) - PROJECT REPORT
+
+## 1. Project Overview
+The Legal Case Management System (LCMS) is a comprehensive digital platform designed to streamline court operations, advocate workflows, and citizen access to legal information. It provides a multi-role environment (Citizen, Advocate, Court Admin) with real-time analytics, case tracking, and document management.
+
+---
+
+## 2. Technology Stack
+
+### Frontend (User Interface)
+- **Framework:** React.js (with Vite for fast builds)
+- **Styling:** Vanilla CSS & Lucide-React for premium iconography
+- **Animations:** Framer Motion for smooth, interactive UI transitions
+- **Charts:** Recharts for dynamic case analytics and trends
+- **Routing:** React Router DOM for role-based protected navigation
+- **State Management:** React Context API (AuthContext, ThemeContext)
+
+### Backend (Server)
+- **Language:** Python
+- **Framework:** Flask (Restful API architecture)
+- **ORM:** SQLAlchemy (Database modeling and queries)
+- **Authentication:** JSON Web Tokens (JWT) via Flask-JWT-Extended
+- **Security:** Bcrypt for secure password hashing and masking
+- **Middleware:** Flask-CORS for cross-origin resource sharing
+
+### Database
+- **Engine:** SQLite (Relational database for structured legal data)
+- **Migrations:** Managed via SQLAlchemy `db.create_all()` logic
+
+---
+
+## 3. File Structure & Module Descriptions
+
+### Backend (Python/Flask)
+- `backend/app.py`: The core application factory. Initializes the Flask server, connects the database, and registers all feature blueprints.
+- `backend/config.py`: Centralized configuration for database URI, JWT secrets, and environment variables.
+- `backend/models/`:
+    - `user.py`: Defines the User model (Roles: public, advocate, court).
+    - `case.py`: Defines the Case, Hearing, and CaseTimeline models.
+    - `document.py`: Manages file metadata for evidence and legal papers.
+    - `message.py`: Handles internal communication between advocates and clients.
+    - `notification.py`: Logic for system alerts and emails.
+    - `otp.py`: Manages temporary OTP tokens for secure citizen login.
+- `backend/routes/`:
+    - `auth.py`: Login/Signup logic for all roles including Aadhaar+OTP flow.
+    - `cases.py`: CRUD operations for case registration and tracking.
+    - `analytics.py`: Generates data for dashboards (Case trends, performance).
+    - `hearings.py`: Manages the court calendar and hearing schedules.
+
+### Frontend (React)
+- `src/App.jsx`: Root component containing the application's route configuration and role-based access control.
+- `src/services/api.js`: The central API service layer that handles all communication between the React frontend and Flask backend.
+- `src/layouts/DashboardLayout.jsx`: The shell component providing the sidebar and navbar for logged-in users.
+- `src/pages/`:
+    - `court/CourtDashboard.jsx`: Administrative hub for managing cases, judges, and analytics.
+    - `advocate/AdvocateDashboard.jsx`: Personalized workspace for lawyers to track their cases and clients.
+    - `public/PublicDashboard.jsx`: Client-facing portal for tracking personal cases via Aadhaar.
+    - `auth/LoginPage.jsx`: Multi-modal login system for all legal roles.
+- `src/components/shared/`: Reusable UI components like `Modal`, `StatusBadge`, `QRCodeViewer`, and `QRCodeScanner`.
+
+---
+
+## 4. Key Features Implemented
+1. **Multi-Role Dashboards:** Tailored experiences for Citizens, Lawyers, and Court Staff.
+2. **Secure Case Tracking:** End-to-end case lifecycle management from filing to judgment.
+3. **QR Code Integration:** Unique QR codes for every case for quick identification and scanning.
+4. **Automated Analytics:** Visual tracking of case pendency, trends, and hearing counts.
+5. **Real-time Notifications:** Automated alerts for upcoming hearings and status changes.
+6. **Smart Search:** Deep search functionality across case numbers, titles, and parties.
+
+---
+© 2024 Legal Case Management System • Comprehensive Technical Documentation

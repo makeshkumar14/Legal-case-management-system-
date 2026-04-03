@@ -1,16 +1,87 @@
-# React + Vite
+# Legal Case Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Full-stack legal case management platform with role-based access for citizens, advocates, and court admins.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Frontend: React + Vite
+- Backend: Flask + SQLAlchemy + JWT
+- Database: MySQL
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/` - React frontend
+- `backend/` - Flask backend API and models
 
-## Expanding the ESLint configuration
+## Quick Start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1) Backend
+
+From `backend`:
+
+```bash
+venv\Scripts\activate
+venv\Scripts\python.exe app.py
+```
+
+Backend runs on `http://127.0.0.1:5000`.
+
+### 2) Frontend
+
+From project root:
+
+```bash
+npm install
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173`.
+
+## Review Demo Data (Important)
+
+To ensure enough mock data is available for review, run this from `backend`:
+
+```bash
+venv\Scripts\python.exe seed_review_data.py
+```
+
+This seed is **non-destructive** and will:
+
+- ensure demo users for all roles exist
+- ensure at least 20+ cases exist (current setup reaches 40)
+- keep login credentials stable for review
+
+Optional verification:
+
+```bash
+venv\Scripts\python.exe verify_review_flow.py
+```
+
+This checks login + role-based case visibility + status update propagation.
+
+## Demo Login Credentials
+
+### Citizen (OTP login)
+
+- Aadhaar: `123456789012`
+- Flow:
+  - send OTP from login page
+  - use displayed demo OTP to verify
+
+### Advocate
+
+- Bar Council ID: `BCI/MAH/2019/4521`
+- Password: `password123`
+
+### Court Admin
+
+- Admin ID: `ADMIN001`
+- Password: `admin123`
+
+## Review Checklist
+
+- login with all three roles
+- citizen can view own case list and status
+- advocate can view assigned cases
+- court can view all cases and update status
+- updated case status is visible to citizen

@@ -16,6 +16,7 @@ class Task(db.Model):
     def to_dict(self):
         return {
             "id": f"TASK-{self.id:03d}",
+            "databaseId": self.id,
             "caseId": self.case_id,
             "title": self.title,
             "completed": self.completed,

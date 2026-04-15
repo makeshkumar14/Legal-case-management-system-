@@ -1,22 +1,55 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { AUTH_CHANGE_EVENT } from '../services/api';
 
 const AuthContext = createContext();
+const validRoles = ['public', 'advocate', 'court'];
+
+function getStoredUser() {
+  const saved = localStorage.getItem('user');
+  if (!saved) return null;
+
+  try {
+    const parsedUser = JSON.parse(saved);
+    if (parsedUser && parsedUser.role && validRoles.includes(parsedUser.role)) {
+      return parsedUser;
+    }
+  } catch (err) {
+    // Fall through to clear the corrupted session below.
+  }
+
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  return null;
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(() => getStoredUser());
 
   const [token, setToken] = useState(() => {
     return localStorage.getItem('token') || null;
   });
+
+  useEffect(() => {
+    const syncStoredAuth = () => {
+      setUser(getStoredUser());
+      setToken(localStorage.getItem('token') || null);
+    };
+
+    window.addEventListener('storage', syncStoredAuth);
+    window.addEventListener(AUTH_CHANGE_EVENT, syncStoredAuth);
+
+    return () => {
+      window.removeEventListener('storage', syncStoredAuth);
+      window.removeEventListener(AUTH_CHANGE_EVENT, syncStoredAuth);
+    };
+  }, []);
 
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
     localStorage.setItem('user', JSON.stringify(userData));
     if (jwtToken) localStorage.setItem('token', jwtToken);
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
   };
 
   const logout = () => {
@@ -24,6 +57,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
   };
 
   const isAuthenticated = !!user && !!token;

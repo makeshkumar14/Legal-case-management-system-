@@ -30,9 +30,12 @@ def list_notifications():
 @notifications_bp.route("/<int:notif_id>/read", methods=["PUT"])
 @jwt_required()
 def mark_read(notif_id):
+    user_id = int(get_jwt_identity())
     notif = Notification.query.get(notif_id)
     if not notif:
         return jsonify({"error": "Notification not found"}), 404
+    if notif.user_id != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
 
     notif.is_read = True
     db.session.commit()
@@ -43,9 +46,12 @@ def mark_read(notif_id):
 @notifications_bp.route("/<int:notif_id>", methods=["DELETE"])
 @jwt_required()
 def delete_notification(notif_id):
+    user_id = int(get_jwt_identity())
     notif = Notification.query.get(notif_id)
     if not notif:
         return jsonify({"error": "Notification not found"}), 404
+    if notif.user_id != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
 
     db.session.delete(notif)
     db.session.commit()

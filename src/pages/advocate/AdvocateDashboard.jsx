@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal, Search, ScanLine, Bell } from 'lucide-react';
+import { FileText, Calendar, Upload, CheckCircle, Clock, AlertTriangle, ChevronRight, Filter, Plus, MoreHorizontal, Search, ScanLine, Bell, Eye } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { casesAPI, tasksAPI, documentsAPI, hearingsAPI, notificationsAPI } from '../../services/api';
+import { DATA_SYNC_EVENT, casesAPI, tasksAPI, documentsAPI, hearingsAPI, notificationsAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { useTheme } from '../../context/ThemeContext';
 import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../components/shared/Toast';
+import { openBlobInNewTab } from '../../utils/fileActions';
+import { getCaseNumber, getCaseRouteId, getDatabaseId, isHttpUrl } from '../../utils/legalData';
 
 export function AdvocateDashboard() {
   const [filter, setFilter] = useState('all');
@@ -15,6 +19,8 @@ export function AdvocateDashboard() {
   const [showScanner, setShowScanner] = useState(false);
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
 
   const [cases, setCases] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -24,6 +30,8 @@ export function AdvocateDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
         const [casesRes, tasksRes, docsRes, calRes, notifRes] = await Promise.all([
@@ -33,6 +41,7 @@ export function AdvocateDashboard() {
           hearingsAPI.calendar(),
           notificationsAPI.list()
         ]);
+        if (!isMounted) return;
         setCases(casesRes.data.cases || casesRes.data || []);
         setTasks(tasksRes.data.tasks || tasksRes.data || []);
         setEvidences(docsRes.data.documents || docsRes.data || []);
@@ -41,17 +50,49 @@ export function AdvocateDashboard() {
       } catch (err) {
         console.error('Error fetching advocate data:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchData();
+
+    const syncDashboard = () => fetchData();
+    window.addEventListener(DATA_SYNC_EVENT, syncDashboard);
+    return () => {
+      isMounted = false;
+      window.removeEventListener(DATA_SYNC_EVENT, syncDashboard);
+    };
   }, []);
+
+  const viewEvidence = async (evidence) => {
+    const databaseId = getDatabaseId(evidence);
+    if (!databaseId) return;
+
+    try {
+      const response = await documentsAPI.file(databaseId);
+      openBlobInNewTab(response.blob);
+    } catch (err) {
+      addToast({ type: 'error', title: 'Unable to open document', message: err.message || 'Please try again.' });
+    }
+  };
 
   const advocateCases = cases.slice(0, 4);
   const filteredCases = filter === 'all' ? advocateCases : advocateCases.filter(c => c.priority === filter);
+  const runSearch = () => {
+    if (!searchId.trim()) {
+      navigate('/advocate/cases');
+      return;
+    }
+    const match = cases.find((item) => getCaseNumber(item).toLowerCase() === searchId.trim().toLowerCase());
+    if (match) {
+      navigate(`/advocate/cases/${getCaseRouteId(match)}`);
+      return;
+    }
+    navigate(`/advocate/cases?q=${encodeURIComponent(searchId.trim())}`);
+  };
 
   const stats = [
-    { label: 'Active Cases', value: cases.length.toString(), icon: FileText, color: 'bg-orange-500', iconColor: 'text-white', trend: `${cases.filter(c => c.status === 'active').length} active` },
+    { label: 'Active Cases', value: cases.length.toString(), icon: FileText, color: 'bg-orange-500', iconColor: 'text-white', trend: `${cases.filter(c => !['closed', 'dismissed'].includes(c.status)).length} active` },
     { label: "Today's Hearings", value: calendarEvents.length.toString(), icon: Calendar, color: 'bg-orange-500', iconColor: 'text-white', trend: 'On track' },
     { label: 'Pending Tasks', value: tasks.filter(t => t.status !== 'completed' && !t.completed).length.toString(), icon: Clock, color: 'bg-orange-500', iconColor: 'text-white', trend: `${tasks.filter(t => t.priority === 'high').length} urgent` },
     { label: 'Evidence', value: evidences.length.toString(), icon: Upload, color: 'bg-orange-500', iconColor: 'text-white', trend: `${evidences.filter(e => !e.verified).length} pending` },
@@ -89,6 +130,9 @@ export function AdvocateDashboard() {
               <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search cases..."
                 className="w-64 pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all shadow-sm" />
             </div>
+            <button onClick={runSearch} className="px-4 py-3 bg-[#1a1a2e] text-white rounded-xl font-semibold">
+              Search
+            </button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -100,9 +144,9 @@ export function AdvocateDashboard() {
             </motion.button>
           </div>
 
-          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/advocate/cases')}
             className="flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
-            <Plus className="w-5 h-5" />New Case
+            <Plus className="w-5 h-5" />View Cases
           </motion.button>
         </div>
       </div>
@@ -140,11 +184,12 @@ export function AdvocateDashboard() {
           <div className="grid gap-3">
             {filteredCases.map((c, i) => (
               <motion.div key={c.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
+                onClick={() => navigate(`/advocate/cases/${getCaseRouteId(c)}`)}
                 className={`p-5 rounded-2xl border-l-4 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/50 transition-all cursor-pointer group shadow-sm ${priorityColors[c.priority] || ''}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-mono text-[#6b6b80]">{c.case_number || c.caseNumber}</span>
+                      <span className="text-xs font-mono text-[#6b6b80]">{getCaseNumber(c)}</span>
                       <StatusBadge status={c.status} size="sm" />
                       <StatusBadge status={c.priority} size="sm" />
                     </div>
@@ -214,7 +259,7 @@ export function AdvocateDashboard() {
             <div className="space-y-3">
               {evidences.slice(0, 3).map((e, i) => (
                 <div key={e.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e]">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${e.file_type === 'pdf' ? 'bg-red-500/20 text-red-400' : e.file_type === 'jpg' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#b4f461]/20 text-[#b4f461]'}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${e.fileType === 'pdf' ? 'bg-red-500/20 text-red-400' : e.fileType === 'jpg' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#b4f461]/20 text-[#b4f461]'}`}>
                     <Upload className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -222,6 +267,9 @@ export function AdvocateDashboard() {
                     <p className="text-xs text-[#6b6b80]">{e.size || e.file_size || ''}</p>
                   </div>
                   <StatusBadge status={e.verified ? 'verified' : 'pending'} size="sm" />
+                  <button onClick={() => viewEvidence(e)} className="p-2 rounded-lg hover:bg-orange-500/10 text-[#6b6b80] hover:text-orange-500 transition-colors" title="View document">
+                    <Eye className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -249,8 +297,13 @@ export function AdvocateDashboard() {
         isOpen={showScanner}
         onClose={() => setShowScanner(false)}
         onScan={(value) => {
-          const id = value.replace('LCMS:', '');
-          setSearchId(id);
+          if (isHttpUrl(value)) {
+            window.open(value, '_blank', 'noopener,noreferrer');
+            return;
+          }
+          const scannedValue = value.replace('LCMS:', '');
+          setSearchId(scannedValue);
+          navigate(`/advocate/cases?q=${encodeURIComponent(scannedValue)}`);
         }}
       />
     </div>

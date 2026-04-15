@@ -1,14 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Gavel, Users, BarChart3, Plus, TrendingUp, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine, Download } from 'lucide-react';
+import { FileText, Gavel, Users, BarChart3, Plus, Clock, QrCode, Edit, Trash2, Eye, Search, ScanLine, Download } from 'lucide-react';
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal, ConfirmModal } from '../../components/shared/Modal';
 import { QRCodeViewer } from '../../components/shared/QRCodeViewer';
 import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
-import { casesAPI, analyticsAPI } from '../../services/api';
+import { useToast } from '../../components/shared/Toast';
+import { casesAPI, analyticsAPI, courtroomsAPI } from '../../services/api';
+import { triggerBrowserDownload } from '../../utils/fileActions';
+import { CASE_STATUS_OPTIONS, formatDate, getCaseNumber, getCaseRouteId, getCaseType, isHttpUrl, toDateInputValue } from '../../utils/legalData';
+
+const defaultFormData = {
+  title: '',
+  caseType: 'Civil',
+  petitioner: '',
+  respondent: '',
+  priority: 'medium',
+  status: 'filed',
+  advocateId: '',
+  description: '',
+  judge: '',
+  courtRoom: '',
+  nextHearing: '',
+};
 
 export function CourtDashboard() {
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -18,70 +38,71 @@ export function CourtDashboard() {
   const [searchId, setSearchId] = useState('');
   const [showScanner, setShowScanner] = useState(false);
 
-  // Form State
-  const [formData, setFormData] = useState({
-    title: '',
-    caseType: 'Civil',
-    petitioner: '',
-    respondent: '',
-    priority: 'medium',
-    status: 'filed',
-    advocateId: '',
-    description: '',
-    judge: '',
-    courtRoom: '',
-    nextHearing: ''
-  });
+  const [formData, setFormData] = useState(defaultFormData);
 
   const [cases, setCases] = useState([]);
+  const [courtrooms, setCourtrooms] = useState([]);
+  const [qrLinks, setQrLinks] = useState(null);
   const [analyticsData, setAnalyticsData] = useState({ totalCases: 0, pendingCases: 0, todayHearings: 0, casesTrend: [], casesByType: [], dailyHearings: [] });
   const [advocates, setAdvocates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusSavingId, setStatusSavingId] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [casesRes, dashRes, trendRes, typeRes, hearingsRes, perfRes] = await Promise.all([
-          casesAPI.list(),
-          analyticsAPI.dashboard(),
-          analyticsAPI.casesTrend(),
-          analyticsAPI.casesByType(),
-          analyticsAPI.dailyHearings(),
-          analyticsAPI.allAdvocates()
-        ]);
-        setCases(casesRes.data.cases || casesRes.data || []);
-        const dash = dashRes.data;
-        setAnalyticsData({
-          totalCases: dash.totalCases || 0,
-          pendingCases: dash.pendingCases || 0,
-          todayHearings: dash.todayHearings || 0,
-          casesTrend: trendRes.data.trend || trendRes.data || [],
-          casesByType: (typeRes.data.types || typeRes.data || []).map(t => ({ ...t, color: t.color || ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'][Math.floor(Math.random() * 5)] })),
-          dailyHearings: hearingsRes.data.hearings || hearingsRes.data || [],
-        });
-        setAdvocates(perfRes.data || []);
-      } catch (err) {
-        console.error('Error fetching court data:', err);
-      } finally {
+  const loadDashboard = async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true);
+    }
+    try {
+      const [casesRes, dashRes, trendRes, typeRes, hearingsRes, perfRes, roomsRes] = await Promise.all([
+        casesAPI.list(),
+        analyticsAPI.dashboard(),
+        analyticsAPI.casesTrend(),
+        analyticsAPI.casesByType(),
+        analyticsAPI.dailyHearings(),
+        analyticsAPI.allAdvocates(),
+        courtroomsAPI.list(),
+      ]);
+      const dash = dashRes.data || {};
+      setCases(casesRes.data || []);
+      setCourtrooms(roomsRes.data || []);
+      setAnalyticsData({
+        totalCases: dash.totalCases || 0,
+        pendingCases: dash.pendingCases || 0,
+        todayHearings: dash.todayHearings || 0,
+        casesTrend: trendRes.data || [],
+        casesByType: typeRes.data || [],
+        dailyHearings: hearingsRes.data || [],
+      });
+      setAdvocates(perfRes.data || []);
+    } catch (err) {
+      console.error('Error fetching court data:', err);
+      if (!silent) {
+        addToast({ type: 'error', title: 'Unable to load court dashboard', message: err.message || 'Please try again.' });
+      }
+    } finally {
+      if (!silent) {
         setLoading(false);
       }
-    };
-    fetchData();
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
   }, []);
 
   const handleExportCSV = () => {
     const headers = ['Case Number', 'Title', 'Petitioner', 'Respondent', 'Type', 'Status', 'Priority', 'Judge', 'Court Room', 'Next Hearing'];
     const rows = cases.map(c => [
-      c.caseNumber || c.case_number,
+      getCaseNumber(c),
       c.title,
       c.petitioner,
       c.respondent,
-      c.caseType,
+      getCaseType(c),
       c.status,
       c.priority,
       c.judge,
       c.courtRoom || c.court_room_name,
-      c.nextHearing ? new Date(c.nextHearing).toLocaleDateString() : 'N/A'
+      formatDate(c.nextHearing || c.next_hearing)
     ]);
 
     const csvContent = [
@@ -97,7 +118,114 @@ export function CourtDashboard() {
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+      document.body.removeChild(link);
+  };
+
+  const exportCaseCSV = async (caseItem) => {
+    try {
+      const response = await casesAPI.exportCsv(getCaseRouteId(caseItem));
+      triggerBrowserDownload(response.blob, response.filename || `${getCaseNumber(caseItem)}-details.csv`);
+    } catch (err) {
+      console.error('Error exporting case CSV:', err);
+      addToast({ type: 'error', title: 'Unable to export case CSV', message: err.message || 'Please try again.' });
+    }
+  };
+
+  const openCaseQr = async (caseItem) => {
+    try {
+      const response = await casesAPI.reportLinks(getCaseRouteId(caseItem));
+      setSelectedCase(caseItem);
+      setQrLinks(response.data);
+      setShowQRModal(true);
+    } catch (err) {
+      console.error('Error generating QR links:', err);
+      addToast({ type: 'error', title: 'Unable to generate QR', message: err.message || 'Please try again.' });
+    }
+  };
+
+  const openCaseDocuments = (caseItem) => {
+    navigate(`/court/cases/${getCaseRouteId(caseItem)}?tab=documents`);
+  };
+
+  const updateCaseStatus = async (caseItem, nextStatus) => {
+    const caseId = getCaseRouteId(caseItem);
+    if (!caseId || caseItem.status === nextStatus) return;
+
+    setStatusSavingId(caseId);
+    try {
+      const response = await casesAPI.update(caseId, { status: nextStatus });
+      const updatedCase = response.data?.case || {};
+
+      setCases((currentCases) =>
+        currentCases.map((item) => (
+          getCaseRouteId(item) === caseId
+            ? { ...item, ...updatedCase, advocate: updatedCase.advocate || item.advocate }
+            : item
+        ))
+      );
+
+      setSelectedCase((currentCase) => (
+        getCaseRouteId(currentCase) === caseId
+          ? { ...currentCase, ...updatedCase, advocate: updatedCase.advocate || currentCase?.advocate }
+          : currentCase
+      ));
+
+      addToast({
+        type: 'success',
+        title: 'Case status updated',
+        message: `The case status is now ${nextStatus.replace(/_/g, ' ')}.`,
+      });
+      await loadDashboard({ silent: true });
+    } catch (err) {
+      console.error('Error updating case status:', err);
+      addToast({ type: 'error', title: 'Unable to update case status', message: err.message || 'Please try again.' });
+    } finally {
+      setStatusSavingId(null);
+    }
+  };
+
+  const filteredCases = useMemo(() => {
+    const query = searchId.trim().toLowerCase();
+    if (!query) return cases.slice(0, 5);
+
+    return cases
+      .filter((caseItem) =>
+        [getCaseNumber(caseItem), caseItem.title, caseItem.petitioner, caseItem.respondent]
+          .some((value) => String(value || '').toLowerCase().includes(query))
+      )
+      .slice(0, 5);
+  }, [cases, searchId]);
+
+  const runCaseSearch = (rawValue = searchId) => {
+    const query = rawValue.replace('LCMS:', '').trim();
+    if (!query) return;
+
+    const exactMatch = cases.find(
+      (caseItem) => getCaseNumber(caseItem).toLowerCase() === query.toLowerCase()
+    );
+
+    if (exactMatch) {
+      navigate(`/court/cases/${getCaseRouteId(exactMatch)}`);
+      return;
+    }
+
+    navigate(`/court/cases?q=${encodeURIComponent(query)}`);
+  };
+
+  const populateForm = (caseItem) => {
+    setFormData({
+      title: caseItem.title || '',
+      caseType: getCaseType(caseItem),
+      petitioner: caseItem.petitioner || '',
+      respondent: caseItem.respondent || '',
+      priority: caseItem.priority || 'medium',
+      status: caseItem.status || 'filed',
+      advocateId: String(caseItem.advocateId || caseItem.advocate_id || caseItem.advocate?.id || ''),
+      description: caseItem.description || '',
+      judge: caseItem.judge || '',
+      courtRoom: caseItem.courtRoom || caseItem.court_room_name || '',
+      nextHearing: toDateInputValue(caseItem.nextHearing || caseItem.next_hearing),
+    });
   };
 
   const stats = [
@@ -126,13 +254,17 @@ export function CourtDashboard() {
           <p className="text-[#6b6b80]">Manage cases, hearings, and court operations</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
-              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search cases..."
+              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && runCaseSearch()} placeholder="Search cases..."
                 className="w-64 pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition-all shadow-sm" />
             </div>
+            <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => runCaseSearch()}
+              className="flex items-center gap-2 px-4 py-3 bg-[#1a1a2e] hover:bg-[#2d2d45] text-white font-bold rounded-xl transition-all shadow-sm">
+              Search
+            </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -145,11 +277,11 @@ export function CourtDashboard() {
           </div>
 
           <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleExportCSV}
-            className="flex items-center gap-2 px-5 py-3 bg-[#1a1a2e] dark:bg-[#232338] hover:bg-[#2d2d45] border-2 border-[#e5e4df] dark:border-[#2d2d45] text-[#1a1a2e] dark:text-white font-bold rounded-xl transition-all shadow-sm">
+            className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-[#232338] hover:bg-gray-50 dark:hover:bg-[#2d2d45] border-2 border-[#e5e4df] dark:border-[#2d2d45] text-[#1a1a2e] dark:text-white font-bold rounded-xl transition-all shadow-sm">
             <Download className="w-5 h-5" />Export CSV
           </motion.button>
 
-          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowCaseModal(true)}
+          <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setFormData(defaultFormData); setShowCaseModal(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all">
             <Plus className="w-5 h-5" />Register New Case
           </motion.button>
@@ -208,7 +340,14 @@ export function CourtDashboard() {
           {/* Cases Table */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="p-6 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] shadow-sm">
-            <h3 className="text-lg font-semibold text-[#1a1a2e] dark:text-white mb-4">Recent Cases</h3>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h3 className="text-lg font-semibold text-[#1a1a2e] dark:text-white">{searchId.trim() ? 'Matching Cases' : 'Recent Cases'}</h3>
+              {searchId.trim() && (
+                <button onClick={() => navigate(`/court/cases?q=${encodeURIComponent(searchId.trim())}`)} className="text-sm font-semibold text-red-500 hover:text-red-600">
+                  Open full results
+                </button>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -222,36 +361,42 @@ export function CourtDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {cases.slice(0, 5).map((c, i) => (
-                    <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
+                  {filteredCases.map((c, i) => (
+                    <motion.tr key={getCaseRouteId(c) || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 + i * 0.05 }}
                       className="border-b border-[#e5e4df] dark:border-[#2d2d45] hover:bg-[#f7f6f3] dark:hover:bg-[#1a1a2e] transition-colors group">
-                      <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{c.case_number || c.caseNumber}</td>
+                      <td className="py-4 px-4 text-sm text-red-600 font-mono font-semibold">{getCaseNumber(c)}</td>
                       <td className="py-4 px-4 text-sm text-[#1a1a2e] dark:text-white max-w-xs truncate">{c.title}</td>
                       <td className="py-4 px-4 text-sm text-[#6b6b80] max-w-[150px] truncate" title={c.petitioner}>{c.petitioner || 'Unknown'}</td>
                       <td className="py-4 px-4 text-sm text-[#6b6b80] max-w-[150px] truncate" title={c.advocate ? c.advocate.name : 'Unassigned'}>{c.advocate ? c.advocate.name : 'Unassigned'}</td>
-                      <td className="py-4 px-4"><StatusBadge status={c.status} size="sm" /></td>
+                      <td className="py-4 px-4">
+                        <div className="space-y-2 min-w-[180px]">
+                          <StatusBadge status={c.status} size="sm" />
+                          <select
+                            value={c.status || 'filed'}
+                            disabled={statusSavingId === getCaseRouteId(c)}
+                            onChange={(e) => updateCaseStatus(c, e.target.value)}
+                            className="w-full px-3 py-2 bg-white dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-lg text-xs text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-60"
+                          >
+                            {CASE_STATUS_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
                       <td className="py-4 px-4">
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setSelectedCase(c); setShowQRModal(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><QrCode className="w-4 h-4" /></button>
+                          <button onClick={() => openCaseQr(c)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors" title="Generate QR"><QrCode className="w-4 h-4" /></button>
+                          <button onClick={() => openCaseDocuments(c)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors" title="View documents"><FileText className="w-4 h-4" /></button>
                           <button onClick={() => { setSelectedCase(c); setShowViewModal(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => exportCaseCSV(c)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-500 transition-colors" title="Export case CSV"><Download className="w-4 h-4" /></button>
                           <button onClick={() => { 
                             setSelectedCase(c); 
-                            setFormData({
-                              title: c.title,
-                              caseType: c.caseType || c.case_type || 'Civil',
-                              petitioner: c.petitioner,
-                              respondent: c.respondent,
-                              priority: c.priority || 'medium',
-                              status: c.status || 'filed',
-                              advocateId: c.advocate_id || (c.advocate ? c.advocate.id : ''),
-                              description: c.description || '',
-                              judge: c.judge || '',
-                              courtRoom: c.courtRoom || c.court_room_name || '',
-                              nextHearing: c.nextHearing ? c.nextHearing.split('T')[0] : ''
-                            });
+                            populateForm(c);
                             setShowEditModal(true); 
                           }} className="p-2 rounded-lg hover:bg-amber-500/20 text-[#6b6b80] hover:text-amber-400 transition-colors"><Edit className="w-4 h-4" /></button>
-                          <button onClick={() => setShowDeleteConfirm(true)} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => { setSelectedCase(c); setShowDeleteConfirm(true); }} className="p-2 rounded-lg hover:bg-red-500/20 text-[#6b6b80] hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </motion.tr>
@@ -396,7 +541,9 @@ export function CourtDashboard() {
               <p className="text-sm text-[#1a1a2e] dark:text-white leading-relaxed">{selectedCase.description || 'No description provided.'}</p>
             </div>
 
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end gap-3 pt-4">
+              <button onClick={() => openCaseDocuments(selectedCase)} className="px-6 py-3 bg-white border-2 border-[#e5e4df] text-[#1a1a2e] rounded-xl font-bold hover:bg-[#f7f6f3] transition-all">View Documents</button>
+              <button onClick={() => exportCaseCSV(selectedCase)} className="px-6 py-3 bg-white border-2 border-[#e5e4df] text-[#1a1a2e] rounded-xl font-bold hover:bg-[#f7f6f3] transition-all">Export CSV</button>
               <button onClick={() => setShowViewModal(false)} className="px-6 py-3 bg-[#1a1a2e] text-white rounded-xl font-bold hover:bg-[#2d2d45] transition-all">Close Details</button>
             </div>
           </div>
@@ -406,12 +553,18 @@ export function CourtDashboard() {
       <Modal isOpen={showCaseModal} onClose={() => setShowCaseModal(false)} title="Register New Case" size="lg">
         <form className="space-y-5" onSubmit={async (e) => {
           e.preventDefault();
+          if (!formData.title.trim() || !formData.petitioner.trim() || !formData.respondent.trim() || !formData.advocateId || !formData.courtRoom) {
+            addToast({ type: 'warning', title: 'Missing case details', message: 'Title, petitioner, respondent, advocate, and court room are required.' });
+            return;
+          }
           try {
             await casesAPI.create(formData);
             setShowCaseModal(false);
-            window.location.reload(); // Quick refresh to show new case
+            setFormData(defaultFormData);
+            addToast({ type: 'success', title: 'Case created', message: 'The new case has been registered successfully.' });
+            await loadDashboard();
           } catch (err) {
-            alert('Failed to create case: ' + err.message);
+            addToast({ type: 'error', title: 'Unable to create case', message: err.message || 'Please try again.' });
           }
         }}>
           <div className="grid grid-cols-2 gap-4">
@@ -454,18 +607,15 @@ export function CourtDashboard() {
             </div>
             <div>
               <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Court Room</label>
-              <input type="text" value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Room 102" />
+              <select required value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="">Select Court Room...</option>
+                {courtrooms.map((room) => <option key={room.id} value={room.name}>{room.name}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Status</label>
               <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
-                <option value="filed">Filed</option>
-                <option value="under_review">Under Review</option>
-                <option value="hearing_scheduled">Hearing Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="judgment_reserved">Judgment Reserved</option>
-                <option value="closed">Closed</option>
-                <option value="dismissed">Dismissed</option>
+                {CASE_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </div>
             <div className="col-span-2">
@@ -492,12 +642,17 @@ export function CourtDashboard() {
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Case Details" size="lg">
         <form className="space-y-5" onSubmit={async (e) => {
           e.preventDefault();
+          if (!formData.title.trim() || !formData.petitioner.trim() || !formData.respondent.trim() || !formData.advocateId || !formData.courtRoom) {
+            addToast({ type: 'warning', title: 'Missing case details', message: 'Title, petitioner, respondent, advocate, and court room are required.' });
+            return;
+          }
           try {
-            await casesAPI.update(selectedCase.databaseId || selectedCase.id, formData);
+            await casesAPI.update(getCaseRouteId(selectedCase), formData);
             setShowEditModal(false);
-            window.location.reload();
+            addToast({ type: 'success', title: 'Case updated', message: 'The case details have been updated successfully.' });
+            await loadDashboard();
           } catch (err) {
-            alert('Failed to update case: ' + err.message);
+            addToast({ type: 'error', title: 'Unable to update case', message: err.message || 'Please try again.' });
           }
         }}>
           <div className="grid grid-cols-2 gap-4">
@@ -540,18 +695,15 @@ export function CourtDashboard() {
             </div>
             <div>
               <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Court Room</label>
-              <input type="text" value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500" placeholder="e.g. Room 102" />
+              <select required value={formData.courtRoom} onChange={(e) => setFormData({...formData, courtRoom: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
+                <option value="">Select Court Room...</option>
+                {courtrooms.map((room) => <option key={room.id} value={room.name}>{room.name}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">Case Status</label>
               <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-3 bg-[#f7f6f3] dark:bg-[#1a1a2e] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500">
-                <option value="filed">Filed</option>
-                <option value="under_review">Under Review</option>
-                <option value="hearing_scheduled">Hearing Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="judgment_reserved">Judgment Reserved</option>
-                <option value="closed">Closed</option>
-                <option value="dismissed">Dismissed</option>
+                {CASE_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </div>
             <div className="col-span-2">
@@ -577,7 +729,16 @@ export function CourtDashboard() {
 
       {/* QR Code Modal */}
       <Modal isOpen={showQRModal} onClose={() => setShowQRModal(false)} title="Case QR Code" size="sm">
-        {selectedCase && <div className="flex flex-col items-center"><QRCodeViewer value={`LCMS:${selectedCase.id}`} title={selectedCase.caseNumber || selectedCase.case_number} /></div>}
+        {selectedCase && (
+          <div className="flex flex-col items-center">
+            <QRCodeViewer value={qrLinks?.pdfUrl || `LCMS:${getCaseNumber(selectedCase)}`} title={getCaseNumber(selectedCase)} />
+            {qrLinks?.pdfUrl && (
+              <a href={qrLinks.pdfUrl} target="_blank" rel="noreferrer" className="mt-4 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold">
+                Open case PDF
+              </a>
+            )}
+          </div>
+        )}
       </Modal>
 
       <ConfirmModal 
@@ -585,11 +746,13 @@ export function CourtDashboard() {
         onClose={() => setShowDeleteConfirm(false)} 
         onConfirm={async () => {
           try {
-            await casesAPI.remove(selectedCase.databaseId || selectedCase.id);
+            await casesAPI.remove(getCaseRouteId(selectedCase));
             setShowDeleteConfirm(false);
-            window.location.reload();
+            setSelectedCase(null);
+            addToast({ type: 'success', title: 'Case deleted', message: 'The case has been removed successfully.' });
+            await loadDashboard();
           } catch (err) {
-            alert('Failed to delete case: ' + err.message);
+            addToast({ type: 'error', title: 'Unable to delete case', message: err.message || 'Please try again.' });
           }
         }} 
         title="Delete Case" 
@@ -603,8 +766,15 @@ export function CourtDashboard() {
         isOpen={showScanner}
         onClose={() => setShowScanner(false)}
         onScan={(value) => {
-          const id = value.replace('LCMS:', '');
-          setSearchId(id);
+          if (isHttpUrl(value)) {
+            setShowScanner(false);
+            navigate(`/court/qr?lookup=${encodeURIComponent(value)}`);
+            return;
+          }
+          const caseNumber = value.replace('LCMS:', '').trim();
+          setSearchId(caseNumber);
+          setShowScanner(false);
+          runCaseSearch(value);
         }}
       />
     </div>

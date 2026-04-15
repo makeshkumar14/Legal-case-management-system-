@@ -23,13 +23,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', showClose
             transition={{ type: 'spring', duration: 0.4 }}
             className={clsx('fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full mx-4', sizes[size])}
           >
-            <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-xl border-2 border-[#e5e4df] rounded-3xl shadow-2xl overflow-hidden">
               {(title || showClose) && (
-                <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                  {title && <h2 className="text-lg font-semibold text-white">{title}</h2>}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[#e5e4df]">
+                  {title && <h2 className="text-lg font-semibold text-[#1a1a2e]">{title}</h2>}
                   {showClose && (
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <X className="w-5 h-5 text-slate-400" />
+                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-[#f7f6f3] transition-colors">
+                      <X className="w-5 h-5 text-[#6b6b80]" />
                     </button>
                   )}
                 </div>
@@ -53,9 +53,9 @@ export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confi
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <p className="text-slate-300 mb-6">{message}</p>
+      <p className="text-[#6b6b80] mb-6">{message}</p>
       <div className="flex justify-end gap-3">
-        <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors">{cancelText}</button>
+        <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-[#f7f6f3] hover:bg-[#efeee9] text-[#6b6b80] font-medium transition-colors border-2 border-[#e5e4df]">{cancelText}</button>
         <button onClick={() => { onConfirm(); onClose(); }} className={clsx('px-4 py-2.5 rounded-xl text-white font-medium transition-colors', variants[variant])}>{confirmText}</button>
       </div>
     </Modal>

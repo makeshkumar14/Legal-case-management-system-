@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, FileText, Calendar, Clock, Bell, ChevronRight, QrCode, AlertCircle, CheckCircle, Timer, TrendingUp, ScanLine } from 'lucide-react';
-import { casesAPI, notificationsAPI } from '../../services/api';
+import { DATA_SYNC_EVENT, casesAPI, hearingsAPI, notificationsAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Modal } from '../../components/shared/Modal';
 import { QRCodeViewer } from '../../components/shared/QRCodeViewer';
@@ -9,6 +9,8 @@ import { Timeline } from '../../components/shared/Timeline';
 import { CountdownTimer } from '../../components/shared/CountdownTimer';
 import { QRCodeScanner } from '../../components/shared/QRCodeScanner';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { formatTime, getCaseNumber, getCaseRouteId } from '../../utils/legalData';
 
 export function PublicDashboard() {
   const [searchId, setSearchId] = useState('');
@@ -16,18 +18,22 @@ export function PublicDashboard() {
   const [showQR, setShowQR] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [userCases, setUserCases] = useState([]);
+  const [hearings, setHearings] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [casesRes, notifRes] = await Promise.all([
+        const [casesRes, hearingsRes, notifRes] = await Promise.all([
           casesAPI.list(),
+          hearingsAPI.list(),
           notificationsAPI.list()
         ]);
         setUserCases(casesRes.data.cases || casesRes.data || []);
+        setHearings(hearingsRes.data || []);
         setNotifications(notifRes.data.notifications || notifRes.data || []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -36,14 +42,50 @@ export function PublicDashboard() {
       }
     };
     fetchData();
+
+    window.addEventListener(DATA_SYNC_EVENT, fetchData);
+    return () => window.removeEventListener(DATA_SYNC_EVENT, fetchData);
   }, []);
 
-  const firstCase = userCases[0];
-  const nextHearingDate = firstCase?.nextHearing || firstCase?.hearings?.[0]?.date;
+  const nextUpcomingHearing = useMemo(() => {
+    const now = Date.now();
+
+    return [...hearings]
+      .filter((hearing) => hearing.status === 'scheduled')
+      .map((hearing) => {
+        const targetDate = hearing.startTime || hearing.date;
+        return {
+          ...hearing,
+          targetDate,
+          targetTimestamp: new Date(targetDate).getTime(),
+        };
+      })
+      .filter((hearing) => Number.isFinite(hearing.targetTimestamp) && hearing.targetTimestamp >= now)
+      .sort((left, right) => left.targetTimestamp - right.targetTimestamp)[0] || null;
+  }, [hearings]);
+
+  const nextHearingCase = useMemo(
+    () => userCases.find((caseItem) => String(caseItem.databaseId) === String(nextUpcomingHearing?.caseId)) || null,
+    [nextUpcomingHearing, userCases]
+  );
+
+  const nextHearingDate = nextUpcomingHearing?.targetDate || null;
+  const goToCaseSearch = () => {
+    if (!searchId.trim()) {
+      navigate('/public/search');
+      return;
+    }
+    const match = userCases.find((item) => getCaseNumber(item).toLowerCase() === searchId.trim().toLowerCase());
+    if (match) {
+      navigate(`/public/cases/${getCaseRouteId(match)}`);
+      return;
+    }
+    navigate(`/public/search?q=${encodeURIComponent(searchId.trim())}`);
+  };
 
   const stats = [
-    { label: 'Active Cases', value: userCases.length.toString(), icon: FileText, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: `${userCases.filter(c => c.status === 'active').length} active` },
-    { label: 'Next Hearing', value: nextHearingDate ? new Date(nextHearingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'None', icon: Calendar, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: firstCase?.courtRoom || 'No upcoming' },
+    { label: 'Active Cases', value: userCases.length.toString(), icon: FileText, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: `${userCases.filter(c => !['closed', 'dismissed'].includes(c.status)).length} active` },
+    { label: 'Next Hearing', value: nextHearingDate ? new Date(nextHearingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'None', icon: Calendar, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: nextUpcomingHearing?.location || nextHearingCase?.courtRoom || 'No upcoming' },
     { label: 'Documents', value: userCases.reduce((sum, c) => sum + (c.documents?.length || 0), 0).toString(), icon: Clock, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: 'Total files' },
     { label: 'Notifications', value: notifications.length.toString(), icon: Bell, color: 'bg-[#1a1a2e]', iconColor: 'text-[#b4f461]', change: `${notifications.filter(n => !n.read).length} unread` },
   ];
@@ -74,6 +116,10 @@ export function PublicDashboard() {
             <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Search by Case ID..."
               className="w-full pl-12 pr-4 py-3 bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] rounded-xl text-[#1a1a2e] dark:text-white placeholder:text-[#6b6b80] focus:outline-none focus:ring-2 focus:ring-[#b4f461]/40 focus:border-[#b4f461] transition-all shadow-sm" />
           </div>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={goToCaseSearch}
+            className="px-4 py-3 bg-[#1a1a2e] text-white rounded-xl font-semibold">
+            Search
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -109,7 +155,7 @@ export function PublicDashboard() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[#1a1a2e] dark:text-white">Your Cases</h2>
-            <button className="text-sm text-[#2d6a25] hover:text-[#1a5a1a] font-medium flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></button>
+            <button onClick={() => navigate('/public/cases')} className="text-sm text-[#2d6a25] hover:text-[#1a5a1a] font-medium flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></button>
           </div>
 
           <div className="space-y-3">
@@ -124,11 +170,11 @@ export function PublicDashboard() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-mono text-[#2d6a25] bg-[#b4f461]/20 px-2 py-1 rounded-lg">{c.case_number || c.caseNumber}</span>
+                      <span className="text-xs font-mono text-[#2d6a25] bg-[#b4f461]/20 px-2 py-1 rounded-lg">{getCaseNumber(c)}</span>
                       <StatusBadge status={c.status} size="sm" />
                     </div>
                     <h3 className="text-[#1a1a2e] dark:text-white font-medium mb-1 truncate">{c.title}</h3>
-                    <p className="text-sm text-[#6b6b80]">{c.court}</p>
+                    <p className="text-sm text-[#6b6b80]">{c.courtRoom || 'Court room pending'}</p>
                   </div>
                   <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setShowQR(c); }}
                     className="p-2 rounded-xl bg-[#f7f6f3] dark:bg-[#1a1a2e] hover:bg-[#b4f461]/20 text-[#6b6b80] hover:text-[#b4f461] transition-colors">
@@ -163,8 +209,9 @@ export function PublicDashboard() {
                   <span className="text-sm font-medium">Next Hearing</span>
                 </div>
                 <CountdownTimer targetDate={nextHearingDate} />
-                <p className="text-sm text-[#6b6b80] mt-4">{firstCase?.caseType} Hearing</p>
-                <p className="text-xs text-[#6b6b80]">{firstCase?.courtRoom || 'Main Hall'}</p>
+                <p className="text-sm text-[#6b6b80] mt-4">{nextHearingCase?.caseType || nextUpcomingHearing?.type || 'Hearing'}</p>
+                <p className="text-xs text-[#6b6b80]">{nextUpcomingHearing?.location || nextHearingCase?.courtRoom || 'Court room pending'}</p>
+                {nextUpcomingHearing?.startTime && <p className="text-xs text-[#6b6b80] mt-1">{formatTime(nextUpcomingHearing.startTime)}</p>}
               </div>
             </motion.div>
           )}
@@ -204,8 +251,9 @@ export function PublicDashboard() {
         isOpen={showScanner}
         onClose={() => setShowScanner(false)}
         onScan={(value) => {
-          const id = value.replace('LCMS:', '');
-          setSearchId(id);
+          const scannedValue = value.replace('LCMS:', '');
+          setSearchId(scannedValue);
+          navigate(`/public/search?q=${encodeURIComponent(scannedValue)}`);
         }}
       />
     </div>

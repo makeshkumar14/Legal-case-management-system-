@@ -68,6 +68,7 @@ export function Sidebar() {
   const location = useLocation();
   const menu = menuConfig[user?.role] || menuConfig.public;
   const colors = roleColors[user?.role] || roleColors.public;
+  const rootPath = `/${user?.role}`;
 
   return (
     <motion.aside
@@ -96,7 +97,10 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
         {menu.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isRootItem = item.path === rootPath;
+          const isActive = isRootItem
+            ? location.pathname === item.path
+            : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
           return (
             <NavLink key={item.path} to={item.path}
               className={clsx(

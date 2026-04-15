@@ -1,3 +1,5 @@
+import os
+
 from models import db
 
 
@@ -18,11 +20,13 @@ class Document(db.Model):
     def to_dict(self):
         return {
             "id": f"EVD-{self.id:03d}",
+            "databaseId": self.id,
             "caseId": self.case_id,
             "title": self.title,
             "type": self.doc_type,
             "fileType": self.file_type,
             "filePath": self.file_path,
+            "fileName": os.path.basename(self.file_path) if self.file_path else None,
             "fileSize": self.file_size,
             "size": self.file_size,
             "verified": self.verified,

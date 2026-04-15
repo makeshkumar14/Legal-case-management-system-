@@ -43,7 +43,9 @@ class Case(db.Model):
             "priority": self.priority,
             "petitioner": self.petitioner,
             "respondent": self.respondent,
+            "advocateId": self.advocate_id,
             "judge": self.judge,
+            "courtroomId": self.courtroom_id,
             "courtRoom": self.court_room_name,
             "nextHearing": self.next_hearing.isoformat() if self.next_hearing else None,
             "filingDate": self.filing_date.isoformat() if self.filing_date else None,
@@ -55,8 +57,9 @@ class Case(db.Model):
                 "email": self.advocate.email,
             }
         if include_details:
-            data["hearings"] = [h.to_dict() for h in self.hearings]
-            data["timeline"] = [t.to_dict() for t in self.timeline]
+            data["hearings"] = [h.to_dict() for h in sorted(self.hearings, key=lambda item: ((item.date or 0), (item.start_time or 0)))]
+            data["timeline"] = [t.to_dict() for t in sorted(self.timeline, key=lambda item: (item.date or 0, item.created_at or 0))]
+            data["documents"] = [d.to_dict() for d in sorted(self.documents, key=lambda item: item.uploaded_at or 0, reverse=True)]
         return data
 
 

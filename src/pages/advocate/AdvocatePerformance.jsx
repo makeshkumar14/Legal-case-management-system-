@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Award, Star, Target, BarChart3, Calendar, Briefcase, Trophy, Zap } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, Legend } from 'recharts';
-import { casesAPI } from '../../services/api';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { analyticsAPI, casesAPI } from '../../services/api';
 
 const monthlyData = [
   { month: 'Jul', won: 8, lost: 2, settled: 3 }, { month: 'Aug', won: 10, lost: 1, settled: 4 },
@@ -11,8 +11,6 @@ const monthlyData = [
   { month: 'Jan', won: 14, lost: 1, settled: 6 }, { month: 'Feb', won: 8, lost: 0, settled: 3 },
 ];
 
-const winRateData = [{ name: 'Win Rate', value: 78, fill: '#b4f461' }];
-
 const specializations = [
   { type: 'Civil', cases: 45, wins: 38, rate: '84%', color: 'bg-blue-500' },
   { type: 'Criminal', cases: 28, wins: 22, rate: '79%', color: 'bg-red-500' },
@@ -20,6 +18,15 @@ const specializations = [
   { type: 'Consumer', cases: 12, wins: 10, rate: '83%', color: 'bg-purple-500' },
   { type: 'MACT', cases: 8, wins: 7, rate: '88%', color: 'bg-emerald-500' },
 ];
+
+const specializationColors = {
+  Civil: 'bg-blue-500',
+  Criminal: 'bg-red-500',
+  Family: 'bg-amber-500',
+  Consumer: 'bg-purple-500',
+  MACT: 'bg-emerald-500',
+  Writ: 'bg-sky-500',
+};
 
 const achievements = [
   { icon: Trophy, title: 'First 100 Cases', desc: 'Handled 100 cases successfully', unlocked: true },
@@ -31,23 +38,34 @@ const achievements = [
 
 export function AdvocatePerformance() {
   const [cases, setCases] = useState([]);
+  const [performance, setPerformance] = useState({ winRate: '0%', specializations: [] });
 
   useEffect(() => {
-    const fetchCases = async () => {
+    const fetchPerformanceData = async () => {
       try {
-        const res = await casesAPI.list();
-        setCases(res.data.cases || res.data || []);
+        const [casesRes, performanceRes] = await Promise.all([casesAPI.list(), analyticsAPI.advocatePerformance()]);
+        setCases(casesRes.data.cases || casesRes.data || []);
+        setPerformance(performanceRes.data || { winRate: '0%', specializations: [] });
       } catch (err) {
-        console.error('Error fetching cases:', err);
+        console.error('Error fetching advocate performance:', err);
       }
     };
-    fetchCases();
+    fetchPerformanceData();
   }, []);
 
   const totalCases = cases.length;
+  const winRateValue = Number.parseFloat(String(performance.winRate || '0').replace('%', '')) || 0;
+  const winRateData = [
+    { name: 'Won', value: winRateValue, fill: '#b4f461' },
+    { name: 'Remaining', value: Math.max(0, 100 - winRateValue), fill: '#e5e4df' },
+  ];
+  const performanceByType = (performance.specializations?.length ? performance.specializations : specializations).map((item) => ({
+    ...item,
+    color: item.color || specializationColors[item.type] || 'bg-slate-500',
+  }));
   const stats = [
     { label: 'Total Cases', value: totalCases, icon: Briefcase, color: 'bg-blue-500', change: '+12 this month' },
-    { label: 'Win Rate', value: '78%', icon: TrendingUp, color: 'bg-emerald-500', change: '+3% vs last month' },
+    { label: 'Win Rate', value: `${winRateValue}%`, icon: TrendingUp, color: 'bg-emerald-500', change: '+3% vs last month' },
     { label: 'Active Cases', value: cases.filter(c => c.status !== 'closed' && c.status !== 'dismissed').length, icon: Target, color: 'bg-amber-500', change: '5 hearings this week' },
     { label: 'Achievements', value: `${achievements.filter(a => a.unlocked).length}/${achievements.length}`, icon: Award, color: 'bg-purple-500', change: '2 more to unlock' },
   ];
@@ -88,11 +106,25 @@ export function AdvocatePerformance() {
         <div className="p-6 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] shadow-sm flex flex-col items-center justify-center">
           <h3 className="font-semibold text-[#1a1a2e] dark:text-white mb-4">Win Rate</h3>
           <ResponsiveContainer width="100%" height={200}>
-            <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={winRateData} startAngle={90} endAngle={-270}>
-              <RadialBar background clockWise dataKey="value" cornerRadius={12} />
-            </RadialBarChart>
+            <PieChart>
+              <Pie
+                data={winRateData}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={82}
+                startAngle={90}
+                endAngle={-270}
+                strokeWidth={0}
+              >
+                {winRateData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
+                ))}
+              </Pie>
+            </PieChart>
           </ResponsiveContainer>
-          <p className="text-4xl font-bold text-[#1a1a2e] dark:text-white -mt-4">78%</p>
+          <p className="text-4xl font-bold text-[#1a1a2e] dark:text-white -mt-4">{winRateValue}%</p>
           <p className="text-sm text-[#6b6b80]">Overall win rate</p>
         </div>
       </div>
@@ -101,7 +133,7 @@ export function AdvocatePerformance() {
         <div className="p-6 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] shadow-sm">
           <h3 className="font-semibold text-[#1a1a2e] dark:text-white mb-4">Performance by Case Type</h3>
           <div className="space-y-4">
-            {specializations.map(spec => (
+            {performanceByType.map(spec => (
               <div key={spec.type}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2"><div className={`w-3 h-3 rounded-full ${spec.color}`} /><span className="text-sm text-[#1a1a2e] dark:text-white font-medium">{spec.type}</span></div>

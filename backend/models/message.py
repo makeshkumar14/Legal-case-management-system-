@@ -19,6 +19,7 @@ class Message(db.Model):
             "text": self.content,
             "from": "me" if hasattr(self, "_current_user_id") and self.sender_id == self._current_user_id else "them",
             "time": self.sent_at.strftime("%I:%M %p") if self.sent_at else None,
+            "sentAt": self.sent_at.isoformat() if self.sent_at else None,
             "isRead": self.is_read,
         }
 
@@ -30,5 +31,6 @@ class Message(db.Model):
             "text": self.content,
             "from": "me" if self.sender_id == current_user_id else "them",
             "time": self.sent_at.strftime("%I:%M %p") if self.sent_at else None,
+            "sentAt": self.sent_at.isoformat() if self.sent_at else None,
             "isRead": self.is_read,
         }

@@ -14,6 +14,7 @@ class CaseNote(db.Model):
     def to_dict(self):
         return {
             "id": f"NOTE-{self.id:03d}",
+            "databaseId": self.id,
             "caseId": self.case_id,
             "content": self.content,
             "createdAt": self.created_at.isoformat() if self.created_at else None,

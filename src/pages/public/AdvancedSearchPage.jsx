@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, X, ChevronDown, Calendar, FileText, AlertTriangle, Clock } from 'lucide-react';
+import { Search, SlidersHorizontal, Calendar } from 'lucide-react';
 import { casesAPI } from '../../services/api';
 import { StatusBadge } from '../../components/shared/StatusBadge';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { formatDate, getCaseNumber, getCaseRouteId, getCaseType } from '../../utils/legalData';
 
 const caseTypes = ['All Types', 'Civil', 'Criminal', 'Family', 'Consumer', 'MACT'];
 const priorities = ['All', 'high', 'medium', 'low'];
@@ -13,7 +14,8 @@ const statuses = ['All', 'hearing_scheduled', 'under_review', 'investigation', '
 export function AdvancedSearchPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedType, setSelectedType] = useState('All Types');
   const [selectedPriority, setSelectedPriority] = useState('All');
@@ -36,8 +38,19 @@ export function AdvancedSearchPage() {
     fetchCases();
   }, []);
 
+  useEffect(() => {
+    const current = searchParams.get('q') || '';
+    const nextValue = query.trim();
+    if (current === nextValue) return;
+
+    const next = new URLSearchParams(searchParams);
+    if (nextValue) next.set('q', nextValue);
+    else next.delete('q');
+    setSearchParams(next, { replace: true });
+  }, [query, searchParams, setSearchParams]);
+
   const filtered = cases.filter(c => {
-    if (query) { const q = query.toLowerCase(); if (![c.title, c.case_number || c.caseNumber, c.petitioner, c.respondent, c.description].some(f => f?.toLowerCase().includes(q))) return false; }
+    if (query) { const q = query.toLowerCase(); if (![c.title, getCaseNumber(c), c.petitioner, c.respondent, c.description].some(f => f?.toLowerCase().includes(q))) return false; }
     if (selectedType !== 'All Types' && c.case_type !== selectedType && c.caseType !== selectedType) return false;
     if (selectedPriority !== 'All' && c.priority !== selectedPriority) return false;
     if (selectedStatus !== 'All' && c.status !== selectedStatus) return false;
@@ -95,22 +108,22 @@ export function AdvancedSearchPage() {
       <div className="space-y-3">
         {filtered.map((c, i) => (
           <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-            onClick={() => navigate(`/${user?.role}/cases/${c.id}`)}
+            onClick={() => navigate(`/${user?.role}/cases/${getCaseRouteId(c)}`)}
             className="p-5 rounded-2xl bg-white/80 dark:bg-[#232338] border-2 border-[#e5e4df] dark:border-[#2d2d45] hover:border-[#b4f461]/30 transition-all shadow-sm cursor-pointer group">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono text-[#b4f461] bg-[#b4f461]/10 px-2 py-0.5 rounded-lg">{c.caseNumber}</span>
+                  <span className="text-xs font-mono text-[#b4f461] bg-[#b4f461]/10 px-2 py-0.5 rounded-lg">{getCaseNumber(c)}</span>
                   <StatusBadge status={c.status} size="sm" />
                   <span className={`text-xs px-2 py-0.5 rounded-full ${c.priority === 'high' ? 'bg-red-500/10 text-red-400' : c.priority === 'medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'}`}>{c.priority}</span>
                 </div>
                 <h3 className="text-[#1a1a2e] dark:text-white font-semibold group-hover:text-[#2d6a25] transition-colors">{c.title}</h3>
               </div>
-              <span className="text-xs text-[#6b6b80] bg-[#f7f6f3] dark:bg-[#1a1a2e] px-2 py-1 rounded-lg">{c.caseType}</span>
+              <span className="text-xs text-[#6b6b80] bg-[#f7f6f3] dark:bg-[#1a1a2e] px-2 py-1 rounded-lg">{getCaseType(c)}</span>
             </div>
             <p className="text-sm text-[#6b6b80] line-clamp-1 mb-3">{c.description}</p>
             <div className="flex items-center gap-4 text-xs text-[#6b6b80]">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{c.filingDate}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(c.filingDate || c.filing_date)}</span>
               <span>Petitioner: {c.petitioner}</span>
               <span>vs {c.respondent}</span>
             </div>

@@ -16,6 +16,7 @@ class Notification(db.Model):
     def to_dict(self):
         return {
             "id": f"NOT-{self.id:03d}",
+            "databaseId": self.id,
             "type": self.type,
             "title": self.title,
             "message": self.message,

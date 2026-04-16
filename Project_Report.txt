@@ -24,7 +24,7 @@ The Legal Case Management System (LCMS) is a comprehensive digital platform desi
 - **Middleware:** Flask-CORS for cross-origin resource sharing
 
 ### Database
-- **Engine:** SQLite (Relational database for structured legal data)
+- **Engine:** MySQL (Relational database for structured legal data)
 - **Migrations:** Managed via SQLAlchemy `db.create_all()` logic
 
 ---
@@ -48,15 +48,15 @@ The Legal Case Management System (LCMS) is a comprehensive digital platform desi
     - `hearings.py`: Manages the court calendar and hearing schedules.
 
 ### Frontend (React)
-- `src/App.jsx`: Root component containing the application's route configuration and role-based access control.
-- `src/services/api.js`: The central API service layer that handles all communication between the React frontend and Flask backend.
-- `src/layouts/DashboardLayout.jsx`: The shell component providing the sidebar and navbar for logged-in users.
-- `src/pages/`:
+- `frontend/src/App.jsx`: Root component containing the application's route configuration and role-based access control.
+- `frontend/src/services/api.js`: The central API service layer that handles all communication between the React frontend and Flask backend.
+- `frontend/src/layouts/DashboardLayout.jsx`: The shell component providing the sidebar and navbar for logged-in users.
+- `frontend/src/pages/`:
     - `court/CourtDashboard.jsx`: Administrative hub for managing cases, judges, and analytics.
     - `advocate/AdvocateDashboard.jsx`: Personalized workspace for lawyers to track their cases and clients.
     - `public/PublicDashboard.jsx`: Client-facing portal for tracking personal cases via Aadhaar.
     - `auth/LoginPage.jsx`: Multi-modal login system for all legal roles.
-- `src/components/shared/`: Reusable UI components like `Modal`, `StatusBadge`, `QRCodeViewer`, and `QRCodeScanner`.
+- `frontend/src/components/shared/`: Reusable UI components like `Modal`, `StatusBadge`, `QRCodeViewer`, and `QRCodeScanner`.
 
 ---
 

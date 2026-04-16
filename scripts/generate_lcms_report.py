@@ -39,7 +39,7 @@ FIGURES = [
 
 
 REFERENCES = [
-    "Project source files: backend/app.py, backend/schema.sql, backend/routes/*.py, src/App.jsx, src/services/api.js.",
+    "Project source files: backend/app.py, backend/schema.sql, backend/routes/*.py, frontend/src/App.jsx, frontend/src/services/api.js.",
     "Flask Documentation. Pallets Projects. https://flask.palletsprojects.com/",
     "SQLAlchemy Documentation. https://docs.sqlalchemy.org/",
     "React Documentation. https://react.dev/",

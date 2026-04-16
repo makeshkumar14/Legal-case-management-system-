@@ -5,7 +5,7 @@
 This project has 2 main parts:
 
 - `backend/`: Flask API, JWT auth, MySQL models, role-based business logic
-- `src/`: React + Vite frontend with separate dashboards for `public`, `advocate`, and `court`
+- `frontend/`: React + Vite frontend with separate dashboards for `public`, `advocate`, and `court`
 
 The app is role-driven:
 
@@ -45,8 +45,8 @@ Main backend blueprints:
 
 Entry point:
 
-- `src/main.jsx`
-- `src/App.jsx`
+- `frontend/src/main.jsx`
+- `frontend/src/App.jsx`
 
 What it does:
 
@@ -59,11 +59,11 @@ What it does:
 
 Frontend auth state:
 
-- `src/context/AuthContext.jsx`
+- `frontend/src/context/AuthContext.jsx`
 
 API auth layer:
 
-- `src/services/api.js`
+- `frontend/src/services/api.js`
 
 Backend auth endpoints:
 
@@ -92,9 +92,9 @@ After login:
 
 Main layout files:
 
-- `src/layouts/DashboardLayout.jsx`
-- `src/components/layout/Sidebar.jsx`
-- `src/components/layout/Navbar.jsx`
+- `frontend/src/layouts/DashboardLayout.jsx`
+- `frontend/src/components/layout/Sidebar.jsx`
+- `frontend/src/components/layout/Navbar.jsx`
 
 How navigation works:
 
@@ -111,7 +111,7 @@ This was one of the main fixes:
 
 Important frontend service file:
 
-- `src/services/api.js`
+- `frontend/src/services/api.js`
 
 This file is the contract between the frontend and backend. It now exposes:
 
@@ -129,9 +129,9 @@ It also emits sync events so pages can refresh after mutations without full relo
 
 Helpful shared UI/data files:
 
-- `src/utils/legalData.js`
-- `src/utils/roleTheme.js`
-- `src/components/shared/Modal.jsx`
+- `frontend/src/utils/legalData.js`
+- `frontend/src/utils/roleTheme.js`
+- `frontend/src/components/shared/Modal.jsx`
 
 ## 6. Role Workflows
 
@@ -139,13 +139,13 @@ Helpful shared UI/data files:
 
 Main pages:
 
-- `src/pages/public/PublicDashboard.jsx`
-- `src/pages/public/AdvancedSearchPage.jsx`
-- `src/pages/shared/CaseWorkspacePage.jsx`
-- `src/pages/shared/CaseDetailPage.jsx`
-- `src/pages/shared/NotificationCenter.jsx`
-- `src/pages/shared/MessagingPage.jsx`
-- `src/pages/shared/ProfilePage.jsx`
+- `frontend/src/pages/public/PublicDashboard.jsx`
+- `frontend/src/pages/public/AdvancedSearchPage.jsx`
+- `frontend/src/pages/shared/CaseWorkspacePage.jsx`
+- `frontend/src/pages/shared/CaseDetailPage.jsx`
+- `frontend/src/pages/shared/NotificationCenter.jsx`
+- `frontend/src/pages/shared/MessagingPage.jsx`
+- `frontend/src/pages/shared/ProfilePage.jsx`
 
 Typical public flow:
 
@@ -161,16 +161,16 @@ Typical public flow:
 
 Main pages:
 
-- `src/pages/advocate/AdvocateDashboard.jsx`
-- `src/pages/shared/CaseWorkspacePage.jsx`
-- `src/pages/shared/CaseDetailPage.jsx`
-- `src/pages/advocate/DocumentManagement.jsx`
-- `src/pages/advocate/AdvocateCalendarPage.jsx`
-- `src/pages/advocate/CaseNotesPage.jsx`
-- `src/pages/advocate/TaskBoardPage.jsx`
-- `src/pages/advocate/AdvocatePerformance.jsx`
-- `src/pages/shared/MessagingPage.jsx`
-- `src/pages/shared/NotificationCenter.jsx`
+- `frontend/src/pages/advocate/AdvocateDashboard.jsx`
+- `frontend/src/pages/shared/CaseWorkspacePage.jsx`
+- `frontend/src/pages/shared/CaseDetailPage.jsx`
+- `frontend/src/pages/advocate/DocumentManagement.jsx`
+- `frontend/src/pages/advocate/AdvocateCalendarPage.jsx`
+- `frontend/src/pages/advocate/CaseNotesPage.jsx`
+- `frontend/src/pages/advocate/TaskBoardPage.jsx`
+- `frontend/src/pages/advocate/AdvocatePerformance.jsx`
+- `frontend/src/pages/shared/MessagingPage.jsx`
+- `frontend/src/pages/shared/NotificationCenter.jsx`
 
 Typical advocate flow:
 
@@ -188,16 +188,16 @@ Typical advocate flow:
 
 Main pages:
 
-- `src/pages/court/CourtDashboard.jsx`
-- `src/pages/shared/CaseWorkspacePage.jsx`
-- `src/pages/shared/CaseDetailPage.jsx`
-- `src/pages/court/HearingScheduler.jsx`
-- `src/pages/court/CourtRoomBoard.jsx`
-- `src/pages/court/AdvocateDirectoryPage.jsx`
-- `src/pages/court/ReportsPage.jsx`
-- `src/pages/court/QRCodeCenter.jsx`
-- `src/pages/shared/MessagingPage.jsx`
-- `src/pages/shared/NotificationCenter.jsx`
+- `frontend/src/pages/court/CourtDashboard.jsx`
+- `frontend/src/pages/shared/CaseWorkspacePage.jsx`
+- `frontend/src/pages/shared/CaseDetailPage.jsx`
+- `frontend/src/pages/court/HearingScheduler.jsx`
+- `frontend/src/pages/court/CourtRoomBoard.jsx`
+- `frontend/src/pages/court/AdvocateDirectoryPage.jsx`
+- `frontend/src/pages/court/ReportsPage.jsx`
+- `frontend/src/pages/court/QRCodeCenter.jsx`
+- `frontend/src/pages/shared/MessagingPage.jsx`
+- `frontend/src/pages/shared/NotificationCenter.jsx`
 
 Typical court flow:
 
@@ -288,12 +288,12 @@ If you want to understand the project quickly, read in this order:
 2. `backend/app.py`
 3. `backend/routes/auth.py`
 4. `backend/routes/cases.py`
-5. `src/App.jsx`
-6. `src/services/api.js`
-7. `src/components/layout/Sidebar.jsx`
-8. `src/components/layout/Navbar.jsx`
+5. `frontend/src/App.jsx`
+6. `frontend/src/services/api.js`
+7. `frontend/src/components/layout/Sidebar.jsx`
+8. `frontend/src/components/layout/Navbar.jsx`
 9. one dashboard per role
-10. `src/pages/shared/CaseDetailPage.jsx`
+10. `frontend/src/pages/shared/CaseDetailPage.jsx`
 
 ## 11. Run Commands
 
@@ -308,7 +308,7 @@ python app.py
 Frontend:
 
 ```powershell
-cd "c:\Users\MAKESH\OneDrive\Desktop\MAX(project)\Legal case management system"
+cd "c:\Users\MAKESH\OneDrive\Desktop\MAX(project)\Legal case management system\frontend"
 npm run dev
 ```
 

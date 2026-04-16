@@ -10,7 +10,7 @@ Full-stack legal case management platform with role-based access for citizens, a
 
 ## Project Structure
 
-- `src/` - React frontend
+- `frontend/` - React frontend
 - `backend/` - Flask backend API and models
 
 ## Quick Start
@@ -28,9 +28,10 @@ Backend runs on `http://127.0.0.1:5000`.
 
 ### 2) Frontend
 
-From project root:
+From `frontend`:
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```

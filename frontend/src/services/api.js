@@ -1,6 +1,7 @@
 export const API_BASE = 'http://localhost:5000/api';
 export const AUTH_CHANGE_EVENT = 'legalcms:auth-changed';
 export const DATA_SYNC_EVENT = 'legalcms:data-sync';
+export const DATA_SYNC_STORAGE_KEY = 'legalcms:data-sync-stamp';
 
 function clearStoredAuth() {
   localStorage.removeItem('token');
@@ -9,6 +10,12 @@ function clearStoredAuth() {
 }
 
 function emitDataSync(scope) {
+  try {
+    localStorage.setItem(DATA_SYNC_STORAGE_KEY, JSON.stringify({ scope, at: Date.now() }));
+  } catch {
+    // Ignore storage write failures and fall back to the window event.
+  }
+
   window.dispatchEvent(new CustomEvent(DATA_SYNC_EVENT, { detail: { scope } }));
 }
 
